@@ -19,3 +19,20 @@ C:\Users\arianneg\Source\Repos\3505Spreadsheet\PS4\SpreadsheetGUI\obj\Debug\Spre
 C:\Users\arianneg\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetGUI.exe.config
 C:\Users\arianneg\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.exe
 C:\Users\arianneg\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetGUI.exe.config
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.exe
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetGUI.exe
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetGUI.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\Spreadsheet.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetPanel.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\Spreadsheet.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\Formula.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetPanel.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetUtilities.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.csprojResolveAssemblyReference.cache
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SS.Form1.resources
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.Properties.Resources.resources
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.csproj.GenerateResource.Cache
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\NetworkController.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\NetworkController.pdb

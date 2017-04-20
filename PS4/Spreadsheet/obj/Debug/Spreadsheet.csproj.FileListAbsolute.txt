@@ -7,3 +7,12 @@ C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\Spreadsheet\obj\Debug\Spreadsh
 C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\Spreadsheet\obj\Debug\Spreadsheet.dll
 C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\Spreadsheet\obj\Debug\Spreadsheet.pdb
 C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\Spreadsheet\bin\Debug\Formula.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\Spreadsheet.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\Spreadsheet.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\Formula.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\SpreadsheetUtilities.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\Formula.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\SpreadsheetUtilities.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\obj\Debug\Spreadsheet.csprojResolveAssemblyReference.cache
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\obj\Debug\Spreadsheet.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\obj\Debug\Spreadsheet.pdb

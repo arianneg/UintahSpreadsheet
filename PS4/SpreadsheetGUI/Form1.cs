@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,6 +19,7 @@ namespace SS
     {
         private string ContentsInitial;
         private Spreadsheet sheet;
+        private Socket server;
         /// <summary>
         /// Initalizes the spreadsheet with A1 cell selelcted, version is "ps6" by default
         /// </summary>
@@ -30,6 +32,7 @@ namespace SS
             spreadsheetPanel1.SetSelection(0, 0);
             AddressLabel.Text = "A1:";
             this.Text = "Spreadsheet";
+            this.serverTextBox.Text = "lab1-18.eng.utah.edu";
         }
 
 
@@ -455,6 +458,23 @@ namespace SS
             {
                 return;
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            this.server = Networking.ConnectToServer(new Action<SocketState>(this.FirstContact), this.serverTextBox.Text);
+        }
+
+        private void FirstContact(SocketState ss)
+        {
+            ss.callMe = new Action<SocketState>(this.ReceiveStartup);
+            Networking.Send(this.server, this.nameTextBox.Text + '\n');
+        }
+
+        private void ReceiveStartup(SocketState ss)
+        {
+            MessageBox.Show("Message Received!");
+            
         }
     }
 }

@@ -11,3 +11,16 @@ C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\UnitTestSpreadsheet\bin\Debug\
 C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\UnitTestSpreadsheet\obj\Debug\UnitTestSpreadsheet.csprojResolveAssemblyReference.cache
 C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\UnitTestSpreadsheet\obj\Debug\UnitTestSpreadsheet.dll
 C:\Users\arianneg\Source\Repos\ShareWithTyler\PS4\UnitTestSpreadsheet\obj\Debug\UnitTestSpreadsheet.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\UnitTestSpreadsheet.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\UnitTestSpreadsheet.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\Formula.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\Spreadsheet.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\SpreadsheetUtilities.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\Spreadsheet.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\Formula.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\SpreadsheetUtilities.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\bin\Debug\Microsoft.VisualStudio.QualityTools.UnitTestFramework.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\obj\Debug\UnitTestSpreadsheet.csprojResolveAssemblyReference.cache
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\obj\Debug\UnitTestSpreadsheet.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\UnitTestSpreadsheet\obj\Debug\UnitTestSpreadsheet.pdb

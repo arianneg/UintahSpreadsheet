@@ -1,0 +1,7 @@
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\NetworkController\bin\Debug\NetworkController.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\NetworkController\bin\Debug\NetworkController.pdb
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\NetworkController\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\NetworkController\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\NetworkController\obj\Debug\NetworkController.csprojResolveAssemblyReference.cache
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\NetworkController\obj\Debug\NetworkController.dll
+C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\NetworkController\obj\Debug\NetworkController.pdb
