@@ -126,10 +126,11 @@ namespace SS
                         spreadsheetPanel1.SetValue(vertical, horizontal, "Formula Error");
                         ValueBox.Text = "Formula Error";
                     }
-                    else
+                    else if (value != null && value != "")
                     {
-                        spreadsheetPanel1.SetValue(vertical, horizontal, value);
-                        ValueBox.Text = value;
+                        Networking.Send(this.server, "3\t1\t" + name + "\t" + value + "\n");
+                        //spreadsheetPanel1.SetValue(vertical, horizontal, value);
+                        //ValueBox.Text = value;
                     }
                 }
             }
@@ -460,21 +461,80 @@ namespace SS
             }
         }
 
+        /// <summary>
+        /// Attempt to connect to the server when this button is clicked.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The EventArgs.</param>
         private void button2_Click(object sender, EventArgs e)
         {
             this.server = Networking.ConnectToServer(new Action<SocketState>(this.FirstContact), this.serverTextBox.Text);
         }
 
+        /// <summary>
+        /// As soon as the connection to the server is successfully established, send the name of
+        /// the requested spreadsheet to the server.
+        /// </summary>
+        /// <param name="ss">The state for this specific socket connection.</param>
         private void FirstContact(SocketState ss)
         {
             ss.callMe = new Action<SocketState>(this.ReceiveStartup);
-            Networking.Send(this.server, this.nameTextBox.Text + '\n');
+            Networking.Send(this.server, this.nameTextBox.Text + "\n");
         }
 
+        /// <summary>
+        /// Begin receiving data from the server and use it to setup the spreadsheet.
+        /// </summary>
+        /// <param name="ss">The state for this specific socket connection.</param>
         private void ReceiveStartup(SocketState ss)
         {
-            MessageBox.Show("Message Received!");
-            
+            StringBuilder sb = ss.sb;
+            MessageBox.Show("(START) Message from server: " + sb.ToString()); // For debugging
+            ss.callMe = new Action<SocketState>(this.ReceiveData);
+            ss.sb.Clear();
+            Networking.GetData(ss);
+        }
+
+        /// <summary>
+        /// Continuously receive data from the server and take the appropriate actions.
+        /// </summary>
+        /// <param name="ss">The state for this specific socket connection.</param>
+        private void ReceiveData(SocketState ss)
+        {
+            StringBuilder sb = ss.sb;
+            String sbStr = sb.ToString();
+            String[] messageTokens = sbStr.Split('\t');
+            int opCode = int.Parse(messageTokens[0]);
+
+            MessageBox.Show("(CALLBACK) Message from server: " + sb.ToString()); // For debugging
+            ss.callMe = new Action<SocketState>(this.ReceiveData);
+            ss.sb.Clear();
+            Networking.GetData(ss);
+
+            // Call the appropriate function based on the opCode
+            switch (opCode)
+            {
+                case 3:
+                    CellEdit(messageTokens);
+                    break;
+            }
+
+
+        }
+
+        private void CellEdit(String[] messageTokens)
+        {
+            int column, row;
+            string value = messageTokens[3];
+            ConvertStringToRowAndColumn(messageTokens[2], out column, out row);
+            MessageBox.Show("Cell Edit:\nColumn:" + column + "\nRow:" + row + "\nValue:" + value); // For debugging
+            spreadsheetPanel1.SetValue(column, row, value);
+
+            // Can only edit GUI on its own thread
+            this.Invoke((MethodInvoker)(() =>
+            {           
+                ValueBox.Text = value;
+            }));
         }
     }
 }
