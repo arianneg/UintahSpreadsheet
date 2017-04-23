@@ -22,6 +22,8 @@ namespace SS
         private Spreadsheet sheet;
         private Socket server;
         private string userName;
+        private bool requestNewSpreadsheet;
+        private string input;
 
         /// <summary>
         /// Initalizes the spreadsheet with A1 cell selelcted, version is "ps6" by default
@@ -175,6 +177,7 @@ namespace SS
         /// <param name="e">event</param>
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            requestNewSpreadsheet = true;
             Networking.Send(this.server, "0\n");
             //NewApplicationContext.getAppContext().RunForm(new Form1());
         }
@@ -230,7 +233,7 @@ namespace SS
                 spreadsheetPanel1.SetSelection(col + 1, row);
                 string name = ConvertColRowIntoName(col + 1, row);
                 DisplayValue(name);
-                
+
 
             }
             //deals with left arrow key pressed
@@ -246,7 +249,7 @@ namespace SS
                 //sets valuebox to error if formula error
                 string name = ConvertColRowIntoName(col + 1, row);
                 DisplayValue(name);
-               
+
 
 
             }
@@ -263,7 +266,7 @@ namespace SS
                 //sets valuebox to error if formula error
                 string name = ConvertColRowIntoName(col + 1, row);
                 DisplayValue(name);
-               
+
 
 
             }
@@ -280,7 +283,7 @@ namespace SS
                 //sets valuebox to error if formula error
                 string name = ConvertColRowIntoName(col + 1, row);
                 DisplayValue(name);
-                
+
 
 
             }
@@ -342,6 +345,10 @@ namespace SS
                     saveToolStripMenuItem_Click(this, new EventArgs());
                 }
             }
+            // request list of files from server
+            requestNewSpreadsheet = false;
+            Networking.Send(this.server, "0\n");
+            /*
             //opens file dialog box in c:
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             openFileDialog1.InitialDirectory = "c:\\";
@@ -364,6 +371,7 @@ namespace SS
                 string value = sheet.GetCellValue(name).ToString();
                 spreadsheetPanel1.SetValue(col, row - 1, value);
             }
+            */
         }
         /// <summary>
         /// deals withe the close item in the file menu dropdown and simply exits
@@ -483,7 +491,7 @@ namespace SS
         {
             this.server = Networking.ConnectToServer(new Action<SocketState>(this.FirstContact), this.serverTextBox.Text);
         }*/
-        
+
         private void ConnectToServer(string serverAddress)
         {
             this.server = Networking.ConnectToServer(new Action<SocketState>(this.FirstContact), serverAddress);
@@ -530,43 +538,64 @@ namespace SS
             StringBuilder sb = ss.sb;
             String sbStr = sb.ToString();
             //MessageBox.Show("(CALLBACK) Message from server: " + sb.ToString()); // For debugging
-            try
-            {
-                String[] messageTokens = sbStr.Split(new Char[] { '\t', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                // For debugging
-                /*foreach (string tok in messageTokens)
-                {
-                    MessageBox.Show(tok);
-                }*/
-                int opCode = int.Parse(messageTokens[0]);
 
-                // Call the appropriate function based on the opCode
-                switch (opCode)
+            String[] message = sbStr.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Process every but the last message because it may not be completed
+            for (int i = 0; i < message.Length - 1; i++)
+            {
+                try
                 {
-                    case 0:
-                        ShowSpreadsheetList();
-                        break;
-                    case 1:
-                        CreateNewSpreadsheet(messageTokens);
-                        break;
-                    case 3:
-                        CellEdit(messageTokens);
-                        break;
+                    String[] messageTokens = message[i].Split(new Char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                    // For debugging
+                    /*foreach (string tok in messageTokens)
+                    {
+                        MessageBox.Show(tok);
+                    }*/
+                    int opCode = int.Parse(messageTokens[0]);
+
+                    // Call the appropriate function based on the opCode
+                    switch (opCode)
+                    {
+                        case 0:
+                            ShowSpreadsheetList();
+                            break;
+                        case 1:
+                            CreateNewSpreadsheet(messageTokens);
+                            break;
+                        case 2:
+                            OpenOldSpreadsheet(messageTokens);
+                            break;
+                        case 3:
+                            CellEdit(messageTokens);
+                            break;
+                    }
                 }
-            }
-            catch (Exception)
-            {
 
-            }
+                catch (Exception)
+                {
 
-            ss.callMe = new Action<SocketState>(this.ReceiveData);
-            ss.sb.Clear();
+                }
+
+                ss.callMe = new Action<SocketState>(this.ReceiveData);
+                //remove the every message + '\n' character
+                ss.sb.Remove(0,message[i].Length +1);
+            }
+           
         }
 
         private void ShowSpreadsheetList()
         {
-            string input = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for the new spreadsheet", "Create New Spreadsheet", "Default", -1, -1);
-            Networking.Send(this.server, "1\t" + input + "\n");
+            if (requestNewSpreadsheet == true)
+            {
+                input = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for the new spreadsheet", "Create New Spreadsheet", "Default", -1, -1);
+                Networking.Send(this.server, "1\t" + input + "\n");
+            }
+            else
+            {
+                input = Microsoft.VisualBasic.Interaction.InputBox("Enter the name of the spreadsheet", "Open Available Spreadsheet", "Default", -1, -1);
+                Networking.Send(this.server, "2\t" + input + "\n");
+            }
         }
 
         private void CreateNewSpreadsheet(String[] messageTokens)
@@ -577,7 +606,7 @@ namespace SS
 
             newForm.Invoke((MethodInvoker)(() =>
             {
-                Spreadsheet sheet = new Spreadsheet(s => true, Normalize, docID);
+                newForm.sheet = new Spreadsheet(input, s => true, Normalize, docID);
                 newForm.spreadsheetPanel1.Enabled = true;
                 newForm.button1.Enabled = true;
                 newForm.ContentsBox.Enabled = true;
@@ -588,6 +617,44 @@ namespace SS
                 MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }));
         }
+        private void OpenOldSpreadsheet(String[] messageTokens)
+        {
+
+            Form1 newForm = new Form1();
+            NewApplicationContext.getAppContext().RunForm(newForm);
+            string docID = messageTokens[1];
+
+            newForm.Invoke((MethodInvoker)(() =>
+            {
+                newForm.sheet = new Spreadsheet(input, s => true, Normalize, docID);
+                newForm.spreadsheetPanel1.Enabled = true;
+                newForm.button1.Enabled = true;
+                newForm.ContentsBox.Enabled = true;
+                newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
+                newForm.spreadsheetPanel1.SetSelection(0, 0);
+                newForm.AddressLabel.Text = "A1:";
+                newForm.Text = "Spreadsheet";
+                //adds al the items in the spreadsheet file into the spreadsheet grid
+                char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+                List<char> list = alpha.ToList<char>();
+                for(int i =2; i<messageTokens.Length; i++)
+                {
+                   
+                    string[] cellValue = messageTokens[i].Split(new Char[] { '\r' }, StringSplitOptions.RemoveEmptyEntries); ;
+
+                    string name = cellValue[0];
+                    string contents = sheet.GetCellContents(name).ToString();
+                    string value = sheet.GetCellValue(name).ToString();
+
+                    int col = list.IndexOf(char.Parse(name.Substring(0, 1)));
+                    int row = int.Parse(name.Substring(1, 1));
+
+                    spreadsheetPanel1.SetValue(col, row - 1, value);
+                }
+
+                MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }));
+        }
 
         private void CellEdit(String[] messageTokens)
         {
@@ -595,7 +662,7 @@ namespace SS
             string value = messageTokens[3];
             ConvertStringToRowAndColumn(messageTokens[2], out column, out row);
             //MessageBox.Show("Cell Edit:\nColumn:" + column + "\nRow:" + row + "\nValue:" + value); // For debugging
-            
+
 
             // Can only edit GUI on its own thread
             this.Invoke((MethodInvoker)(() =>
