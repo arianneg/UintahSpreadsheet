@@ -571,18 +571,20 @@ namespace SS
 
         private void CreateNewSpreadsheet(String[] messageTokens)
         {
+            Form1 newForm = new Form1();
+            NewApplicationContext.getAppContext().RunForm(newForm);
             string docID = messageTokens[1];
 
-            this.Invoke((MethodInvoker)(() =>
+            newForm.Invoke((MethodInvoker)(() =>
             {
-                sheet = new Spreadsheet(s => true, Normalize, docID);
-                spreadsheetPanel1.Enabled = true;
-                button1.Enabled = true;
-                ContentsBox.Enabled = true;
-                spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
-                spreadsheetPanel1.SetSelection(0, 0);
-                AddressLabel.Text = "A1:";
-                this.Text = "Spreadsheet";
+                Spreadsheet sheet = new Spreadsheet(s => true, Normalize, docID);
+                newForm.spreadsheetPanel1.Enabled = true;
+                newForm.button1.Enabled = true;
+                newForm.ContentsBox.Enabled = true;
+                newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
+                newForm.spreadsheetPanel1.SetSelection(0, 0);
+                newForm.AddressLabel.Text = "A1:";
+                newForm.Text = "Spreadsheet";
                 MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }));
         }

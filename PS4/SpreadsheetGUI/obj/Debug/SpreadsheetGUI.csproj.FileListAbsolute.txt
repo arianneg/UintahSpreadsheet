@@ -36,3 +36,6 @@ C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debu
 C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.csproj.GenerateResource.Cache
 C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\NetworkController.dll
 C:\Users\Braeden Diaz\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\NetworkController.pdb
+C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetGUI.exe.config
+C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.exe
+C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.pdb
