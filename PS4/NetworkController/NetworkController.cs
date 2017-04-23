@@ -139,6 +139,7 @@ namespace SS
 
                     ss.sb.Append(message);
                     ss.callMe(ss);
+                    GetData(ss);
                 }
 
             }

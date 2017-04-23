@@ -37,6 +37,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\Formula.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="SpreadsheetPanel">
       <HintPath>..\Resourses\Libraries\SpreadsheetPanel.dll</HintPath>
     </Reference>

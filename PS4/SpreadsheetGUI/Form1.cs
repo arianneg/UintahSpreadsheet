@@ -12,6 +12,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.VisualBasic;
 
 namespace SS
 {
@@ -20,6 +21,8 @@ namespace SS
         private string ContentsInitial;
         private Spreadsheet sheet;
         private Socket server;
+        private string userName;
+
         /// <summary>
         /// Initalizes the spreadsheet with A1 cell selelcted, version is "ps6" by default
         /// </summary>
@@ -27,12 +30,18 @@ namespace SS
         {
             InitializeComponent();
 
-            sheet = new Spreadsheet(s => true, Normalize, "ps6");
+            /*sheet = new Spreadsheet(s => true, Normalize, "ps6");
             spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
             spreadsheetPanel1.SetSelection(0, 0);
             AddressLabel.Text = "A1:";
-            this.Text = "Spreadsheet";
-            this.serverTextBox.Text = "lab1-18.eng.utah.edu";
+            this.Text = "Spreadsheet";*/
+            string serverAddress = Microsoft.VisualBasic.Interaction.InputBox("Enter the Server Address:", "Enter Server Address", "lab1-18.eng.utah.edu", -1, -1);
+            userName = Microsoft.VisualBasic.Interaction.InputBox("Enter a Username:", "Enter Username", "Username", -1, -1);
+            //this.serverTextBox.Text = "lab1-18.eng.utah.edu";
+            spreadsheetPanel1.Enabled = false;
+            button1.Enabled = false;
+            ContentsBox.Enabled = false;
+            ConnectToServer(serverAddress);
         }
 
 
@@ -166,8 +175,8 @@ namespace SS
         /// <param name="e">event</param>
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-            NewApplicationContext.getAppContext().RunForm(new Form1());
+            Networking.Send(this.server, "0\n");
+            //NewApplicationContext.getAppContext().RunForm(new Form1());
         }
 
 
@@ -372,15 +381,19 @@ namespace SS
         /// <param name="e"></param>
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (sheet.Changed)
+            try
             {
-                DialogResult dialogResult = MessageBox.Show("Do you want to save your data?", "Save", MessageBoxButtons.YesNo);
-                //if user selects yes then it opens dialog box and user can save
-                if (dialogResult == DialogResult.Yes)
+                if (sheet.Changed)
                 {
-                    saveToolStripMenuItem_Click(this, new EventArgs());
+                    DialogResult dialogResult = MessageBox.Show("Do you want to save your data?", "Save", MessageBoxButtons.YesNo);
+                    //if user selects yes then it opens dialog box and user can save
+                    if (dialogResult == DialogResult.Yes)
+                    {
+                        saveToolStripMenuItem_Click(this, new EventArgs());
+                    }
                 }
             }
+            catch (Exception) { }
         }
         /// <summary>
         /// normalizer for Spreadsheet 
@@ -461,7 +474,7 @@ namespace SS
             }
         }
 
-        /// <summary>
+        /*/// <summary>
         /// Attempt to connect to the server when this button is clicked.
         /// </summary>
         /// <param name="sender">The sender.</param>
@@ -469,6 +482,11 @@ namespace SS
         private void button2_Click(object sender, EventArgs e)
         {
             this.server = Networking.ConnectToServer(new Action<SocketState>(this.FirstContact), this.serverTextBox.Text);
+        }*/
+        
+        private void ConnectToServer(string serverAddress)
+        {
+            this.server = Networking.ConnectToServer(new Action<SocketState>(this.FirstContact), serverAddress);
         }
 
         /// <summary>
@@ -479,7 +497,7 @@ namespace SS
         private void FirstContact(SocketState ss)
         {
             ss.callMe = new Action<SocketState>(this.ReceiveStartup);
-            Networking.Send(this.server, this.nameTextBox.Text + "\n");
+            Networking.Send(this.server, this.userName + "\n");
         }
 
         /// <summary>
@@ -489,10 +507,18 @@ namespace SS
         private void ReceiveStartup(SocketState ss)
         {
             StringBuilder sb = ss.sb;
-            MessageBox.Show("(START) Message from server: " + sb.ToString()); // For debugging
-            ss.callMe = new Action<SocketState>(this.ReceiveData);
+            String sbStr = sb.ToString();
+            sbStr = sbStr.Replace(" ", String.Empty);
+            //MessageBox.Show("(START) Message from server: " + sbStr); // For debugging
+
+            this.Invoke((MethodInvoker)(() =>
+            {
+                MessageBox.Show(null, "Please open an existing spreadsheet or create a new one using the file menu.", "Use File Menu", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }));
+
             ss.sb.Clear();
-            Networking.GetData(ss);
+            ss.callMe = new Action<SocketState>(this.ReceiveData);
+            this.ReceiveData(ss);
         }
 
         /// <summary>
@@ -503,23 +529,62 @@ namespace SS
         {
             StringBuilder sb = ss.sb;
             String sbStr = sb.ToString();
-            String[] messageTokens = sbStr.Split('\t');
-            int opCode = int.Parse(messageTokens[0]);
-
-            MessageBox.Show("(CALLBACK) Message from server: " + sb.ToString()); // For debugging
-            ss.callMe = new Action<SocketState>(this.ReceiveData);
-            ss.sb.Clear();
-            Networking.GetData(ss);
-
-            // Call the appropriate function based on the opCode
-            switch (opCode)
+            //MessageBox.Show("(CALLBACK) Message from server: " + sb.ToString()); // For debugging
+            try
             {
-                case 3:
-                    CellEdit(messageTokens);
-                    break;
+                String[] messageTokens = sbStr.Split(new Char[] { '\t', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                // For debugging
+                /*foreach (string tok in messageTokens)
+                {
+                    MessageBox.Show(tok);
+                }*/
+                int opCode = int.Parse(messageTokens[0]);
+
+                // Call the appropriate function based on the opCode
+                switch (opCode)
+                {
+                    case 0:
+                        ShowSpreadsheetList();
+                        break;
+                    case 1:
+                        CreateNewSpreadsheet(messageTokens);
+                        break;
+                    case 3:
+                        CellEdit(messageTokens);
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+
             }
 
+            ss.callMe = new Action<SocketState>(this.ReceiveData);
+            ss.sb.Clear();
+        }
 
+        private void ShowSpreadsheetList()
+        {
+            string input = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for the new spreadsheet", "Create New Spreadsheet", "Default", -1, -1);
+            Networking.Send(this.server, "1\t" + input + "\n");
+        }
+
+        private void CreateNewSpreadsheet(String[] messageTokens)
+        {
+            string docID = messageTokens[1];
+
+            this.Invoke((MethodInvoker)(() =>
+            {
+                sheet = new Spreadsheet(s => true, Normalize, docID);
+                spreadsheetPanel1.Enabled = true;
+                button1.Enabled = true;
+                ContentsBox.Enabled = true;
+                spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
+                spreadsheetPanel1.SetSelection(0, 0);
+                AddressLabel.Text = "A1:";
+                this.Text = "Spreadsheet";
+                MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }));
         }
 
         private void CellEdit(String[] messageTokens)
@@ -527,12 +592,13 @@ namespace SS
             int column, row;
             string value = messageTokens[3];
             ConvertStringToRowAndColumn(messageTokens[2], out column, out row);
-            MessageBox.Show("Cell Edit:\nColumn:" + column + "\nRow:" + row + "\nValue:" + value); // For debugging
-            spreadsheetPanel1.SetValue(column, row, value);
+            //MessageBox.Show("Cell Edit:\nColumn:" + column + "\nRow:" + row + "\nValue:" + value); // For debugging
+            
 
             // Can only edit GUI on its own thread
             this.Invoke((MethodInvoker)(() =>
-            {           
+            {
+                spreadsheetPanel1.SetValue(column, row, value);
                 ValueBox.Text = value;
             }));
         }
