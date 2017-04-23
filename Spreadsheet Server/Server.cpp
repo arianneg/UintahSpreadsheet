@@ -236,15 +236,16 @@ string newFile (string message){
 
 /*string openFile (string message)
 {
-  vector<string>data;
+   vector<string>data;
   split(message,'\t', data);
   string name=data[1];
-  if (filename.find(name)!=filename.end()){ // can't find it
+  if (filename.find(name)!=filename.end()){ // found it
     ostringstream stream;
-    stream<<"2\t" << documentID << "\n";
+    int docID=filename[name];
+    stream<<"2\t" << docID << "\n";
     // get all cell name and content
-    map<string,string> myMap = spreadsheet[documentID];
-    for(map<string, pair<string,string> >::const_iterator it = myMap.begin();
+    map<string,string> myMap = spreadsheet[docID];
+    for(map<string, string> ::const_iterator it = myMap.begin();
 	it != myMap.end(); ++it)
       {
 	stream<<"3\t"<<documentID<<"\t"<<it->first<<"\t"<<it->second<<"\n";
@@ -254,7 +255,7 @@ string newFile (string message){
     return result;
   }
   else
-    {
+    { // in case of invalid filename
       return fileList();
     }
 	}*/
