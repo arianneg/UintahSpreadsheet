@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 {
   int sockfd, newsockfd, pid;
   int serverPort = 2112;
-
+  clientID = -1;
   struct sockaddr_in server_addr;
   socklen_t size;
 
@@ -86,6 +86,12 @@ int main(int argc, char** argv)
 	if (pid == 0)
 	{
 	  close(sockfd);
+	  //clientID += 1;
+	  //string clientIDStr;
+	  //ostringstream convert;
+	  //convert << clientID;
+	  //clientIDStr = convert.str() + '\n';
+	  //write(newsockfd, clientIDStr.c_str(), 32);
 	  do_stuff(newsockfd);
 	  exit(0);
 	}
@@ -130,8 +136,6 @@ void do_stuff(int sock)
     if (n < 0)
 	  cout << "\nError on reading from socket!\n" << endl;
 
-	printf("Entire message from client: %s\n", buffer);
-
     /*string incomingData(buffer);
 
 	split(incomingData, '\n', messages);
@@ -160,32 +164,43 @@ void do_stuff(int sock)
 
     messages.erase (messages.begin());*/
 
-	// Pointer to a token array
-	char *tok;
-	tok = strtok(buffer, " \t\n"); // Split on tab characters and a newline character
+	// Convert the entire buffer into a single string
+	string incomingData(buffer);
 
-	// Push all tokens from a single message to a vector
-	while (tok != NULL)
+	if (incomingData.find('\n') != string::npos)
 	{
-	  messageTokens.push_back(tok);
-	  tok = strtok(NULL, " \t\n");
-	}
+	  printf("Entire message from client: %s\n", buffer);
+	  char *tok;
+	  tok = strtok(buffer, " \t\n"); // Split on tab characters and a newline character
 
-	// Get the message type (opcode)
-	int opCode = atoi(messageTokens[0].c_str());
+	  // Push all tokens from a single message to a vector
+	  while (tok != NULL)
+	  {
+	    messageTokens.push_back(tok);
+	    tok = strtok(NULL, " \t\n");
+	  }
 
-	cout << "OpCode: " << opCode << endl;
+	  // Get the message type (opcode)
+	  int opCode = atoi(messageTokens[0].c_str());
 
-	// Call the appropriate functions based on the opCode
-    switch(opCode)
-    {
-      case 3:
-	    cell_edit(sock, messageTokens);
-	    break;
-	  default:
-		// Usually the very first message
-	    n = write(sock, "Hello", 32);
-	    break;
+	  cout << "OpCode: " << opCode << endl;
+
+	  // Call the appropriate functions based on the opCode
+      switch(opCode)
+      {
+	    case 0:
+		  n = write(sock, (fileList()).c_str(), 1024);
+		  break;
+	    case 1:
+		  n = write(sock, (newFile(incomingData)).c_str(), 1024);
+		  break;
+        case 3:
+	      cell_edit(sock, messageTokens);
+	      break;
+	    default:
+	      n = write(sock, "Hello\n", 32);
+	      break;
+	  }
 	}
   }
 }
@@ -201,7 +216,7 @@ string fileList(){
   return fileNames;
 }
 
-/*string newFile (string message){
+string newFile (string message){
   vector<string>data;
   split(message,'\t', data);
   string name=data[1];
@@ -217,9 +232,9 @@ string fileList(){
     {
       return fileList();
     }
-}
+  }
 
-string openFile (string message)
+/*string openFile (string message)
 {
   vector<string>data;
   split(message,'\t', data);
