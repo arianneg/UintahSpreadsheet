@@ -222,6 +222,9 @@ void do_stuff(int sock)
 	    case 1:
 		  n = write(sock, (newFile(incomingData)).c_str(), 1024);
 		  break;
+	    case 2:
+		  n = write(sock, (openFile(incomingData)).c_str(), 1024);
+		  break;
         case 3:
 	      cell_edit(sock, messageTokens);
 	      break;
@@ -271,7 +274,7 @@ string newFile (string message){
     }
   }
 
-/*string openFile (string message)
+string openFile (string message)
 {
    vector<string>data;
   split(message,'\t', data);
@@ -295,7 +298,7 @@ string newFile (string message){
     { // in case of invalid filename
       return fileList();
     }
-	}*/
+  }
 
 // Function that handles cell edits
 void cell_edit(int sock, vector<string> messageTokens)
