@@ -33,6 +33,7 @@ void cell_edit(int sock, vector<string> messageTokens);
 void newSpreadsheet(int sock, vector<string>messageTokens);
 void openSpreadsheet(int sock, vector<string>messageTokens);
 void saveFile(int sock, vector<string>messageTokens);
+void fileRename(int sock, vector<string>messageTokens);
 int main(int argc, char** argv)
 {
   int sockfd, newsockfd, pid;
@@ -207,6 +208,9 @@ void do_stuff(int sock)
 	    case 6:
 	      saveFile(sock,messageTokens);
 	      break;
+	    case 7:
+	      fileRename(sock,messageTokens);
+	      break;
 	    default:
 	      n = write(sock, "Hello\n", 32);
 	      break;
@@ -332,5 +336,24 @@ void saveFile(int sock, vector<string>messageTokens){
   if (d !=filename.end()){
     int DocID = d->second;
      n = write(sock,("7\t"+std::to_string(DocID)+"\n").c_str() ,1024);
+  }
+}
+void fileRename(int sock, vector<string>messageTokens){
+  int n;
+  int DocID = atoi(messageTokens[1].c_str());
+  string newFileName = messageTokens[2];
+
+  
+  if (filename.find(newFileName)==filename.end()){
+    for(map<string,int>::iterator it = filename.begin();it!=filename.end();it++){
+      if(it->second == DocID){
+	filename.erase(it);
+	filename[newFileName] = DocID;
+	n = write(sock, ("6\t"+std::to_string(DocID)+"\t" +newFileName+"\n").c_str(), 1024);
+      }
+    }
+  }
+  else{
+	n = write(sock, ("9\t"+std::to_string(DocID)+"\n").c_str(), 1024);
   }
 }
