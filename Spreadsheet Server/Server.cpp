@@ -33,6 +33,7 @@ void do_stuff(int sock);
 string fileList();
 void split (const string& s, char c,
 	    vector<string>& v);
+void showFileList(int sock, vector<string> messageTokens);
 void cell_edit(int sock, vector<string> messageTokens);
 void newSpreadsheet(int sock, vector<string> messageTokens);
 void openSpreadsheet(int sock, vector<string> messageTokens);
@@ -225,7 +226,8 @@ void do_stuff(int sock)
       switch(opCode)
       {
 	    case 0:
-		  n = write(sock, (fileList()).c_str(), 1024);
+	      // n = write(sock, (fileList()).c_str(), 1024);
+		  showFileList(sock,messageTokens);
 		  break;
 	    case 1:
 		  //n = write(sock, (newFile(incomingData)).c_str(), 1024);
@@ -367,4 +369,14 @@ void undo_edit(int sock, vector<string> messageTokens)
 void redo_edit(int sock, vector<string> messageTokens)
 {
   cout << "REDO CALLED!" << endl;
+}
+void showFileList(int sock, vector<string> messageTokens){
+ string fileNames="0\t";
+  for (map<string,int>::iterator it = filename.begin(); it != filename.end(); ++it)
+    {
+      string temp = it->first + "\t";
+      fileNames.append(temp);
+    }
+  fileNames.append("\n");
+  int n = write(sock,fileNames.c_str(), 1024);
 }
