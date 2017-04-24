@@ -95,13 +95,12 @@ bool DependencyGraph::HasDependees(string s){
 
 
 void  DependencyGraph::AddDependency(string s , string t){
-cout <<"S: "<<s<<endl;
-   cout <<"T: "<<t<<endl;
+
 
 
   if(sorted.find(s)!=sorted.end() && sorted.find(t)!=sorted.end()){
 
- cout <<"both found"<<endl;
+
     Node sNode = sorted.find(s)->second;
    
     Node tNode = sorted.find(t)->second;
@@ -111,18 +110,10 @@ cout <<"S: "<<s<<endl;
 
     if(sSet.find(t)!= sSet.end() &&tSet.find(t)!= tSet.end()){
       
-      cout <<"duplicate dependency entered"<<endl;
+      
       return;
     }
-    // if(tSet.find(t)!= tSet.end()){
-    //   cout<<"found s !!"<<endl;
-
-    // }
-    //  if(sorted.find(s)->second.getStringDependentsList().find(t)!= sorted.find(s)->second.getStringDependentsList().end() && sorted.find(t)->second.getStringDependeesList().find(s)!= sorted.find(t)->second.getStringDependentsList().end()){
-    //
-    //	   cout <<"duplicate dependency entered"<<endl;
-    //   return;
-    // }
+   
     else{
       sorted.find(s)->second.addDependents(t);
       sorted.find(t)->second.addDependees(s);
@@ -132,17 +123,13 @@ cout <<"S: "<<s<<endl;
     }
   }
   else if(sorted.find(s) == sorted.end() && sorted.find(t) == sorted.end()){
- cout <<"neither  found"<<endl;
+ 
  
     Node sNodeNew ;
     Node tNodeNew;
 
     sNodeNew.setData(s);
-    //  sNodeNew.addDependents(t);
-    //  pair<string, Node> Spaired;
-    //   Spaired = make_pair(s,sNodeNew);
-    //  sorted.insert(Spaired);
-   
+    
    
 
         if(s == t){
@@ -167,8 +154,7 @@ sNodeNew.addDependents(t);
 
     tNodeNew.setData(t);
    set<string> tSet = tNodeNew.getStringDependeesList();
-    cout<<"size: "<<tSet.size()<<endl;
-
+  
     tNodeNew.addDependees(s);
     pair<string, Node> Tpaired;
     Tpaired = make_pair(t,tNodeNew);
@@ -180,16 +166,14 @@ sNodeNew.addDependents(t);
     sorted.insert(Tpaired);
 
     set<string> tSet2 = tNodeNew.getStringDependeesList();
-    cout<<"size: "<<tSet2.size()<<endl;
-    cout<<"sNodeNew"<<sNodeNew.getData()<<endl;
-    cout<<"tNodeNew"<<tNodeNew.getData()<<endl;
+   
     size++;
    
     return;
   }
 
   else if(sorted.find(s) != sorted.end() && sorted.find(t) == sorted.end()){
-     cout <<"s found"<<endl;
+     
     sorted.find(s)->second.addDependents(t);
     Node tNodeNew;
     tNodeNew.setData(t);
@@ -201,7 +185,7 @@ sNodeNew.addDependents(t);
     return;
   }
   else if(sorted.find(t)!= sorted.end() && sorted.find(s) == sorted.end()){
- cout <<"t found"<<endl;
+ 
     sorted.find(t)->second.addDependees(s);
     Node sNodeNew;
     sNodeNew.setData(s);
@@ -215,47 +199,6 @@ sNodeNew.addDependents(t);
   }
   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -279,6 +222,107 @@ void DependencyGraph::RemoveDependency(string s, string t){
 
   }
  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+set<string> DependencyGraph::GetDirectDependents(string t){
+
+  return GetDependents(t);
+
+}
+
+void DependencyGraph::Visit(string start, string name, set<string> &visited, list<string> &changed){
+  //cout<<"here"<<endl;
+  //cout<<start<<endl;
+  //cout<<name<<endl;
+
+  visited.insert(name);
+  set<string> directDependents = GetDirectDependents(name);
+
+  set<string>::iterator it;
+  
+  for(it = directDependents.begin(); it!= directDependents.end(); it++){
+    if(*it == start){
+      
+      throw 0;
+
+    }else if(visited.find(*it) == visited.end()){
+      
+      Visit(start, *it, visited, changed);
+
+    }
+
+  }
+  changed.push_front(name);
+  
+  
+
+}
+list<string> DependencyGraph::GetCellsToRecalculate(set<string> names){
+
+  list<string> changed;
+  set<string> visited;
+  
+  set<string>::iterator it;
+  for(it = names.begin(); it != names.end(); it++){
+    if(visited.find(*it) == visited.end()){
+      
+      Visit(*it, *it, visited, changed);
+
+    }
+
+  }
+  return changed;
+
+}
+
+list<string> DependencyGraph::GetCellsToRecalculate(string name){
+  
+ set<string> names;
+  names.insert(name);
+  return GetCellsToRecalculate(names);
+  
+}
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
 //void DependencyGraph::ReplaceDependees(string s, vector<string> newDependees){
 
 

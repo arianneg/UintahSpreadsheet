@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 #include "node.h"
-
+#include <list>
 
 class DependencyGraph{
 
@@ -33,6 +33,35 @@ class DependencyGraph{
   void AddDependency(std::string s, std::string t);
 
   void RemoveDependency(std::string s, std::string t);
+  /////////new
+  std::set<std::string> GetDirectDependents(std::string t);
+  
+  std::list<std::string> GetCellsToRecalculate(std::string name);
+  
+  std::list<std::string> GetCellsToRecalculate(std::set<std::string> names);
+  
+  void Visit(std::string start, std::string name, std::set<std::string> &visited, std::list<std::string> &changed);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // void ReplaceDependees(std::string s, std::vector<std::string> newDependees);
 
