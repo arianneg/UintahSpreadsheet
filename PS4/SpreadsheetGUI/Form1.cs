@@ -23,7 +23,8 @@ namespace SS
         private Socket server;
         private string userName;
         private bool requestNewSpreadsheet;
-        private string input;
+        private string temporaryName;
+        private string formName;
 
         /// <summary>
         /// Initalizes the spreadsheet with A1 cell selelcted, version is "ps6" by default
@@ -316,8 +317,11 @@ namespace SS
         /// <param name="e"></param>
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Networking.Send(this.server, "6\n");
             // Displays a SaveFileDialog so the user can save the Image
             // assigned to file save.
+
+            /*
             SaveFileDialog saveFileDialog1 = new SaveFileDialog();
             saveFileDialog1.Filter = "sprd files (*.sprd)|*.sprd|All Files (*.*)|*.*";
             saveFileDialog1.Title = "Save a sprd File";
@@ -327,6 +331,7 @@ namespace SS
             {
                 sheet.Save(saveFileDialog1.FileName);
             }
+            */
         }
         /// <summary>
         /// delas with the load event under the file menu
@@ -561,14 +566,24 @@ namespace SS
                             ShowSpreadsheetList();
                             break;
                         case 1:
+                            formName = temporaryName;
                             CreateNewSpreadsheet(messageTokens);
                             break;
                         case 2:
+                            formName = temporaryName;
                             OpenOldSpreadsheet(messageTokens);
                             break;
                         case 3:
                             CellEdit(messageTokens);
                             break;
+                        case 6:
+                            formName = temporaryName;
+                            FileRename(messageTokens);
+                            break;
+                        case 9:
+                            MessageBox.Show(null, "This filename exist. Please Try again", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            break;
+
                     }
                 }
 
@@ -584,17 +599,19 @@ namespace SS
            
         }
 
+        
+
         private void ShowSpreadsheetList()
         {
             if (requestNewSpreadsheet == true)
             {
-                input = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for the new spreadsheet", "Create New Spreadsheet", "Default", -1, -1);
-                Networking.Send(this.server, "1\t" + input + "\n");
+                temporaryName = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for the new spreadsheet", "Create New Spreadsheet", "Default", -1, -1);
+                Networking.Send(this.server, "1\t" + temporaryName + "\n");
             }
             else
             {
-                input = Microsoft.VisualBasic.Interaction.InputBox("Enter the name of the spreadsheet", "Open Available Spreadsheet", "Default", -1, -1);
-                Networking.Send(this.server, "2\t" + input + "\n");
+                temporaryName = Microsoft.VisualBasic.Interaction.InputBox("Enter the name of the spreadsheet", "Open Available Spreadsheet", "Default", -1, -1);
+                Networking.Send(this.server, "2\t" + temporaryName + "\n");
             }
         }
 
@@ -606,14 +623,14 @@ namespace SS
 
             newForm.Invoke((MethodInvoker)(() =>
             {
-                newForm.sheet = new Spreadsheet(input, s => true, Normalize, docID);
+                newForm.sheet = new Spreadsheet( s => true, Normalize, docID);
                 newForm.spreadsheetPanel1.Enabled = true;
                 newForm.button1.Enabled = true;
                 newForm.ContentsBox.Enabled = true;
                 newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
                 newForm.spreadsheetPanel1.SetSelection(0, 0);
                 newForm.AddressLabel.Text = "A1:";
-                newForm.Text = "Spreadsheet";
+                newForm.Text = formName;
                 MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }));
         }
@@ -626,14 +643,14 @@ namespace SS
 
             newForm.Invoke((MethodInvoker)(() =>
             {
-                newForm.sheet = new Spreadsheet(input, s => true, Normalize, docID);
+                newForm.sheet = new Spreadsheet( s => true, Normalize, docID);
                 newForm.spreadsheetPanel1.Enabled = true;
                 newForm.button1.Enabled = true;
                 newForm.ContentsBox.Enabled = true;
                 newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
                 newForm.spreadsheetPanel1.SetSelection(0, 0);
                 newForm.AddressLabel.Text = "A1:";
-                newForm.Text = "Spreadsheet";
+                newForm.Text = formName;
                 //adds al the items in the spreadsheet file into the spreadsheet grid
                 char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
                 List<char> list = alpha.ToList<char>();
@@ -670,6 +687,21 @@ namespace SS
                 spreadsheetPanel1.SetValue(column, row, value);
                 ValueBox.Text = value;
             }));
+        }
+        private void FileRename(string[] messageTokens)
+        {
+          
+            string newName = messageTokens[2];
+            // Can only edit GUI on its own thread
+            this.Invoke((MethodInvoker)(() =>
+            {
+                this.Text = newName;
+            }));
+        }
+        private void renameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            temporaryName = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for this spreadsheet", "Rename the Spreadsheet", "Untitled", -1, -1);
+            Networking.Send(this.server, "7\t" + this.sheet.GetSavedVersion(this.formName) + "\t" + temporaryName + "\n");
         }
     }
 }
