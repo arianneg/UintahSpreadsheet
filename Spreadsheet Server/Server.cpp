@@ -14,8 +14,9 @@ using namespace std;
 
 map<string,int> filename;
 map<int, map<string,string> > spreadsheet;
+map<int, string> clients; // Holds the list of clients currently connected to the server <int, string> -> <clientID, Username>
 static int documentID;
-int clientID;
+static int clientID; // Represents the next available client ID
 
 
 // Forward Declarations
@@ -86,12 +87,12 @@ int main(int argc, char** argv)
 	if (pid == 0)
 	{
 	  close(sockfd);
-	  //clientID += 1;
-	  //string clientIDStr;
-	  //ostringstream convert;
-	  //convert << clientID;
-	  //clientIDStr = convert.str() + '\n';
-	  //write(newsockfd, clientIDStr.c_str(), 32);
+	  clientID += 1;
+	  string clientIDStr;
+	  ostringstream convert;
+	  convert << clientID;
+	  clientIDStr = convert.str() + '\n';
+	  write(newsockfd, clientIDStr.c_str(), 32);
 	  do_stuff(newsockfd);
 	  exit(0);
 	}
@@ -126,12 +127,11 @@ void do_stuff(int sock)
   char buffer[1024];
   vector<string> messages;
   vector<string> messageTokens;
+  bool isUserName = true;
 
   while (1)
   {
-	messageTokens.clear();
-    // Initialize the buffer and read from the socket
-    bzero(buffer, 1024);
+	bzero(buffer, 1024);
     n = read(sock, buffer, 1024);
     if (n < 0)
 	  cout << "\nError on reading from socket!\n" << endl;
@@ -170,18 +170,44 @@ void do_stuff(int sock)
 	if (incomingData.find('\n') != string::npos)
 	{
 	  printf("Entire message from client: %s\n", buffer);
+
 	  char *tok;
-	  tok = strtok(buffer, " \t\n"); // Split on tab characters and a newline character
+	  tok = strtok(buffer, " \n"); // Split on tab characters and a newline character
 
 	  // Push all tokens from a single message to a vector
 	  while (tok != NULL)
 	  {
-	    messageTokens.push_back(tok);
-	    tok = strtok(NULL, " \t\n");
+	    messages.push_back(tok);
+	    tok = strtok(NULL, " \n");
+	  }
+
+	  for (int i = 0; i < messages.size(); i++)
+	  {
+		cout << "Message: " << messages[i] << endl;
+
+		istringstream iss(messages[i]);
+		string token;
+		while (getline(iss, token, '\t'))
+		{
+		  messageTokens.push_back(token);
+		}
+	  }
+
+	  for (int i = 0; i < messageTokens.size(); i++)
+	  {
+		cout << "Message Token: " << messageTokens[i] << endl;
 	  }
 
 	  // Get the message type (opcode)
 	  int opCode = atoi(messageTokens[0].c_str());
+
+	  // The first thing received from the client should always be the username
+	  if (isUserName)
+	  {
+		opCode = -1;
+		isUserName = false;
+		clients.insert(pair<int, string>(clientID, messageTokens[0]));		
+	  }
 
 	  cout << "OpCode: " << opCode << endl;
 
@@ -198,10 +224,13 @@ void do_stuff(int sock)
 	      cell_edit(sock, messageTokens);
 	      break;
 	    default:
-	      n = write(sock, "Hello\n", 32);
+	      // Do Nothing
 	      break;
 	  }
 	}
+
+	messages.clear();
+	messageTokens.clear();
   }
 }
 
