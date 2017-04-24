@@ -1,5 +1,5 @@
 main: Server.cpp
-	g++ Server.cpp -o server
+	g++ -std=c++11 Server.cpp -o server
 
 clean:
 	rm -f server *~

@@ -3,12 +3,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h> 
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <iostream>
 #include <vector>
 #include <map>
+#include <string>
 #include <sstream>
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 
@@ -22,14 +31,13 @@ static int clientID; // Represents the next available client ID
 // Forward Declarations
 void do_stuff(int sock);
 string fileList();
-string newFile(string message);
-string openFile(string message);
-string saveFile(string message);
-string closeFile(string message);
-string renameFile(string message);
 void split (const string& s, char c,
 	    vector<string>& v);
 void cell_edit(int sock, vector<string> messageTokens);
+void newSpreadsheet(int sock, vector<string> messageTokens);
+void openSpreadsheet(int sock, vector<string> messageTokens);
+void saveFile(int sock, vector<string> messageTokens);
+void fileRename(int sock, vector<string> messageTokens);
 void undo_edit(int sock, vector<string> messageTokens);
 void redo_edit(int sock, vector<string> messageTokens);
 
@@ -220,10 +228,12 @@ void do_stuff(int sock)
 		  n = write(sock, (fileList()).c_str(), 1024);
 		  break;
 	    case 1:
-		  n = write(sock, (newFile(incomingData)).c_str(), 1024);
+		  //n = write(sock, (newFile(incomingData)).c_str(), 1024);
+		  newSpreadsheet(sock, messageTokens);
 		  break;
 	    case 2:
-		  n = write(sock, (openFile(incomingData)).c_str(), 1024);
+		  //n = write(sock, (openFile(incomingData)).c_str(), 1024);
+		  openSpreadsheet(sock, messageTokens);
 		  break;
         case 3:
 	      cell_edit(sock, messageTokens);
@@ -233,6 +243,12 @@ void do_stuff(int sock)
 		break;
 	    case 5:
 		  redo_edit(sock, messageTokens);
+		  break;
+	    case 6:
+		  saveFile(sock, messageTokens);
+		  break;
+	    case 7:
+		  fileRename(sock, messageTokens);
 		  break;
 	    default:
 	      // Do Nothing
@@ -256,54 +272,50 @@ string fileList(){
   return fileNames;
 }
 
-string newFile (string message){
-  vector<string>data;
-  split(message,'\t', data);
-  string name=data[1];
-  if (filename.find(name)==filename.end()){ // can't find it
-    ostringstream stream;
-    stream<<"1\t" << documentID << "\n";
-    string result = stream.str();
+// Check if file name is not existed. Then assign new DocID for this file
+// if the file exists, send a list of available spreadsheet
+void newSpreadsheet(int sock, vector<string>messageTokens){
+  int n;
+  string name = messageTokens[1];
+  if (filename.find(name)==filename.end()){
     filename[name]=documentID;
-    documentID++;
-    return result;
+    n = write(sock,("1\t"+std::to_string(documentID)+"\n").c_str() ,1024);
+    documentID++;   
   }
-  else
-    {
-      return fileList();
-    }
+  else{
+      n = write(sock, (fileList()).c_str(), 1024);
   }
+}
 
-string openFile (string message)
-{
-   vector<string>data;
-  split(message,'\t', data);
-  string name=data[1];
-  if (filename.find(name)!=filename.end()){ // found it
-    ostringstream stream;
-    int docID=filename[name];
-    stream<<"2\t" << docID << "\n";
-    // get all cell name and content
-    map<string,string> myMap = spreadsheet[docID];
-    for(map<string, string> ::const_iterator it = myMap.begin();
-	it != myMap.end(); ++it)
+void openSpreadsheet(int sock, vector<string>messageTokens){
+  int n;
+  string name = messageTokens[1];
+  map<string,int>::iterator d = filename.find(name);
+  
+  if (d !=filename.end()){
+    int DocID = d->second;
+    map<int,map<string,string>>::iterator s = spreadsheet.find(DocID);
+
+    if(s != spreadsheet.end())
       {
-	stream<<"3\t"<<documentID<<"\t"<<it->first<<"\t"<<it->second<<"\n";
+	map<string,string> currentSpreadsheet = s->second;
+	for(map<string,string>::iterator it=currentSpreadsheet.begin();it!=currentSpreadsheet.end();it++){
+	  string cellName = it->first;
+	  string cellContent = it->second;
+	  n = write(sock, ("3\t"+std::to_string(DocID)+"\t" + cellName + "\t" + cellContent + "\n").c_str(), 1024);
+	}
       }
-    string result = stream.str();
-    documentID++;
-    return result;
   }
-  else
-    { // in case of invalid filename
-      return fileList();
-    }
+  else{
+    n = write(sock, (fileList()).c_str(), 1024);
   }
+}
 
 // Function that handles cell edits
 void cell_edit(int sock, vector<string> messageTokens)
 {
   int n;
+  int DocID = atoi(messageTokens[1].c_str());
   string cellName = messageTokens[2];
   string newContents = messageTokens[3];
 
@@ -311,8 +323,40 @@ void cell_edit(int sock, vector<string> messageTokens)
 
   // Save Cell Contents for Undo Still Required
 
-  n = write(sock, "4\t1\n", 32); // Sends a valid message
-  n = write(sock, ("3\t1\t" + cellName + "\t" + newContents + "\n").c_str(), 32); // Send the cell edit
+  // Save cell name and cell contents
+  spreadsheet[DocID][cellName] = newContents;
+  n = write(sock, ("4\t" + messageTokens[1]+"\n").c_str(), 32); // Sends a valid message
+  n = write(sock, ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), 1024); // Send the cell edit
+}
+
+void saveFile(int sock, vector<string>messageTokens){
+  int n;
+  string name = messageTokens[1];
+  map<string,int>::iterator d = filename.find(name);
+  if (d !=filename.end()){
+    int DocID = d->second;
+     n = write(sock,("7\t"+std::to_string(DocID)+"\n").c_str() ,1024);
+  }
+}
+
+void fileRename(int sock, vector<string>messageTokens){
+  int n;
+  int DocID = atoi(messageTokens[1].c_str());
+  string newFileName = messageTokens[2];
+
+  
+  if (filename.find(newFileName)==filename.end()){
+    for(map<string,int>::iterator it = filename.begin();it!=filename.end();it++){
+      if(it->second == DocID){
+	filename.erase(it);
+	filename[newFileName] = DocID;
+	n = write(sock, ("6\t"+std::to_string(DocID)+"\t" +newFileName+"\n").c_str(), 1024);
+      }
+    }
+  }
+  else{
+	n = write(sock, ("9\t"+std::to_string(DocID)+"\n").c_str(), 1024);
+  }
 }
 
 void undo_edit(int sock, vector<string> messageTokens)
