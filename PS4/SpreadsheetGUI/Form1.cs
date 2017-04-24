@@ -23,6 +23,7 @@ namespace SS
         private Socket server;
         private string userName;
         private int clientID;
+        private int docID;
         private bool requestNewSpreadsheet;
         private string temporaryName;
         private string formName;
@@ -691,11 +692,11 @@ namespace SS
         //}
         private void CreateNewSpreadsheet(String[] messageTokens)
         {
-            string docID = messageTokens[1];
+            this.docID = int.Parse(messageTokens[1]);
 
             this.Invoke((MethodInvoker)(() =>
             {
-                sheet = new Spreadsheet(s => true, Normalize, docID);
+                sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
                 spreadsheetPanel1.Enabled = true;
                 button1.Enabled = true;
                 ContentsBox.Enabled = true;
@@ -711,11 +712,11 @@ namespace SS
 
             Form1 newForm = new Form1();
             NewApplicationContext.getAppContext().RunForm(newForm);
-            string docID = messageTokens[1];
+            this.docID = int.Parse(messageTokens[1]);
 
             newForm.Invoke((MethodInvoker)(() =>
             {
-                newForm.sheet = new Spreadsheet(s => true, Normalize, docID);
+                newForm.sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
                 newForm.spreadsheetPanel1.Enabled = true;
                 newForm.button1.Enabled = true;
                 newForm.ContentsBox.Enabled = true;
@@ -772,6 +773,16 @@ namespace SS
         {
             temporaryName = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for this spreadsheet", "Rename the Spreadsheet", "Untitled", -1, -1);
             Networking.Send(this.server, "7\t" + this.sheet.GetSavedVersion(this.formName) + "\t" + temporaryName + "\n");
+        }
+
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Networking.Send(this.server, "4\t" + this.docID + "\n");
+        }
+
+        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Networking.Send(this.server, "5\t" + this.docID + "\n");
         }
     }
 }
