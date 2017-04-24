@@ -342,7 +342,7 @@ namespace SS
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //if current spreadsheet has changed, it will ask to save before loading another.
-            if (sheet.Changed)
+            /*if (sheet.Changed)
             {
                 DialogResult dialogResult = MessageBox.Show("Do You Want To Save Your Data?", "Save", MessageBoxButtons.YesNo);
                 //if user selects yes then it executes save method
@@ -350,7 +350,7 @@ namespace SS
                 {
                     saveToolStripMenuItem_Click(this, new EventArgs());
                 }
-            }
+            }*/
             // request list of files from server
             requestNewSpreadsheet = false;
             Networking.Send(this.server, "0\n");
