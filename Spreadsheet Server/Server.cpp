@@ -30,6 +30,8 @@ string renameFile(string message);
 void split (const string& s, char c,
 	    vector<string>& v);
 void cell_edit(int sock, vector<string> messageTokens);
+void undo_edit(int sock, vector<string> messageTokens);
+void redo_edit(int sock, vector<string> messageTokens);
 
 int main(int argc, char** argv)
 {
@@ -223,6 +225,12 @@ void do_stuff(int sock)
         case 3:
 	      cell_edit(sock, messageTokens);
 	      break;
+	    case 4:
+		  undo_edit(sock, messageTokens);
+		break;
+	    case 5:
+		  redo_edit(sock, messageTokens);
+		  break;
 	    default:
 	      // Do Nothing
 	      break;
@@ -302,4 +310,14 @@ void cell_edit(int sock, vector<string> messageTokens)
 
   n = write(sock, "4\t1\n", 32); // Sends a valid message
   n = write(sock, ("3\t1\t" + cellName + "\t" + newContents + "\n").c_str(), 32); // Send the cell edit
+}
+
+void undo_edit(int sock, vector<string> messageTokens)
+{
+  cout << "UNDO CALLED!" << endl;
+}
+
+void redo_edit(int sock, vector<string> messageTokens)
+{
+  cout << "REDO CALLED!" << endl;
 }
