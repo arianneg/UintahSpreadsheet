@@ -631,7 +631,6 @@ namespace SS
         //    Form1 newForm = new Form1();
         //    NewApplicationContext.getAppContext().RunForm(newForm);
         //    string docID = messageTokens[1];
-
         //    newForm.Invoke((MethodInvoker)(() =>
         //    {
         //        newForm.sheet = new Spreadsheet( s => true, Normalize, docID);
