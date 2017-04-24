@@ -22,6 +22,7 @@ namespace SS
         private Spreadsheet sheet;
         private Socket server;
         private string userName;
+        private int clientID;
         private bool requestNewSpreadsheet;
         private string temporaryName;
         private string formName;
@@ -510,19 +511,21 @@ namespace SS
         private void FirstContact(SocketState ss)
         {
             ss.callMe = new Action<SocketState>(this.ReceiveStartup);
-            Networking.Send(this.server, this.userName + "\n");
         }
 
         /// <summary>
-        /// Begin receiving data from the server and use it to setup the spreadsheet.
+        /// Begin receiving data from the server.
+        /// 
+        /// The first piece of data from the server should be the client ID.
         /// </summary>
         /// <param name="ss">The state for this specific socket connection.</param>
         private void ReceiveStartup(SocketState ss)
         {
             StringBuilder sb = ss.sb;
             String sbStr = sb.ToString();
-            sbStr = sbStr.Replace(" ", String.Empty);
-            //MessageBox.Show("(START) Message from server: " + sbStr); // For debugging
+            String[] messageTokens = sbStr.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            this.clientID = int.Parse(messageTokens[0]);
+            Networking.Send(this.server, this.userName + "\n");
 
             this.Invoke((MethodInvoker)(() =>
             {
@@ -544,19 +547,58 @@ namespace SS
             String sbStr = sb.ToString();
             //MessageBox.Show("(CALLBACK) Message from server: " + sb.ToString()); // For debugging
 
-            String[] message = sbStr.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            try
+            {
+                String[] messageTokens = sbStr.Split(new Char[] { '\t', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                int opCode = int.Parse(messageTokens[0]);
+
+                // Call the appropriate function based on the opCode
+                switch (opCode)
+                {
+                    case 0:
+                        ShowSpreadsheetList(messageTokens);
+                        break;
+                    case 1:
+                        formName = temporaryName;
+                        CreateNewSpreadsheet(messageTokens);
+                        break;
+                    case 2:
+                        formName = temporaryName;
+                        OpenOldSpreadsheet(messageTokens);
+                        break;
+                    case 3:
+                        CellEdit(messageTokens);
+                        break;
+                    case 6:
+                        formName = temporaryName;
+                        FileRename(messageTokens);
+                        break;
+                    case 9:
+                        MessageBox.Show(null, "This filename exist. Please Try again", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+
+            /*
+             * The code below was not parsing correctly, so I commented it out and added back my old parsing code.
+             * I understand what you're trying to do here, but it wasn't working. If you can get it working, then
+             * that's fine, but please don't push any code that breaks code that's already working, upgrades
+             * can be done later.
+             */
+            //String[] message = sbStr.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
             // Process every but the last message because it may not be completed
-            for (int i = 0; i < message.Length - 1; i++)
+            /*for (int i = 0; i < message.Length - 1; i++)
             {
                 try
-                {
+                { 
+
                     String[] messageTokens = message[i].Split(new Char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                    // For debugging
-                    /*foreach (string tok in messageTokens)
-                    {
-                        MessageBox.Show(tok);
-                    }*/
+
                     int opCode = int.Parse(messageTokens[0]);
 
                     // Call the appropriate function based on the opCode
@@ -595,7 +637,10 @@ namespace SS
                 ss.callMe = new Action<SocketState>(this.ReceiveData);
                 //remove the every message + '\n' character
                 ss.sb.Remove(0, message[i].Length + 1);
-            }
+            }*/
+
+            ss.callMe = new Action<SocketState>(this.ReceiveData);
+            ss.sb.Clear();
 
         }
 
@@ -706,8 +751,6 @@ namespace SS
             int column, row;
             string value = messageTokens[3];
             ConvertStringToRowAndColumn(messageTokens[2], out column, out row);
-            //MessageBox.Show("Cell Edit:\nColumn:" + column + "\nRow:" + row + "\nValue:" + value); // For debugging
-
 
             // Can only edit GUI on its own thread
             this.Invoke((MethodInvoker)(() =>
