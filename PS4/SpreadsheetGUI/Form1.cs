@@ -563,7 +563,7 @@ namespace SS
                     switch (opCode)
                     {
                         case 0:
-                            ShowSpreadsheetList();
+                            ShowSpreadsheetList(messageTokens);
                             break;
                         case 1:
                             formName = temporaryName;
@@ -594,43 +594,71 @@ namespace SS
 
                 ss.callMe = new Action<SocketState>(this.ReceiveData);
                 //remove the every message + '\n' character
-                ss.sb.Remove(0,message[i].Length +1);
+                ss.sb.Remove(0, message[i].Length + 1);
             }
-           
+
         }
 
-        
 
-        private void ShowSpreadsheetList()
+
+        private void ShowSpreadsheetList(String[] messageTokens)
         {
+            StringBuilder fileList = new StringBuilder();
+            fileList.Append("Available Spreadsheets:\n");
+            for(int i = 1; i<messageTokens.Length; i++)
+            {
+                fileList.Append(messageTokens[i]);
+                fileList.Append("\n");
+            }
+            
             if (requestNewSpreadsheet == true)
             {
-                temporaryName = Microsoft.VisualBasic.Interaction.InputBox("Enter a name for the new spreadsheet", "Create New Spreadsheet", "Default", -1, -1);
+                fileList.Append("Enter a name for the new spreadsheet");
+                temporaryName = Microsoft.VisualBasic.Interaction.InputBox(fileList.ToString(), "Create New Spreadsheet", "Default", 0, 0);
                 Networking.Send(this.server, "1\t" + temporaryName + "\n");
             }
             else
             {
-                temporaryName = Microsoft.VisualBasic.Interaction.InputBox("Enter the name of the spreadsheet", "Open Available Spreadsheet", "Default", -1, -1);
+                fileList.Append("Enter the name of the spreadsheet");
+                temporaryName = Microsoft.VisualBasic.Interaction.InputBox(fileList.ToString(), "Open Available Spreadsheet", "Default", -1, -1);
                 Networking.Send(this.server, "2\t" + temporaryName + "\n");
             }
+            fileList.Clear();
         }
 
+        //private void CreateNewSpreadsheet(String[] messageTokens)
+        //{
+        //    Form1 newForm = new Form1();
+        //    NewApplicationContext.getAppContext().RunForm(newForm);
+        //    string docID = messageTokens[1];
+
+        //    newForm.Invoke((MethodInvoker)(() =>
+        //    {
+        //        newForm.sheet = new Spreadsheet( s => true, Normalize, docID);
+        //        newForm.spreadsheetPanel1.Enabled = true;
+        //        newForm.button1.Enabled = true;
+        //        newForm.ContentsBox.Enabled = true;
+        //        newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
+        //        newForm.spreadsheetPanel1.SetSelection(0, 0);
+        //        newForm.AddressLabel.Text = "A1:";
+        //        newForm.Text = formName;
+        //        MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }));
+        //}
         private void CreateNewSpreadsheet(String[] messageTokens)
         {
-            Form1 newForm = new Form1();
-            NewApplicationContext.getAppContext().RunForm(newForm);
             string docID = messageTokens[1];
 
-            newForm.Invoke((MethodInvoker)(() =>
+            this.Invoke((MethodInvoker)(() =>
             {
-                newForm.sheet = new Spreadsheet( s => true, Normalize, docID);
-                newForm.spreadsheetPanel1.Enabled = true;
-                newForm.button1.Enabled = true;
-                newForm.ContentsBox.Enabled = true;
-                newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
-                newForm.spreadsheetPanel1.SetSelection(0, 0);
-                newForm.AddressLabel.Text = "A1:";
-                newForm.Text = formName;
+                sheet = new Spreadsheet(s => true, Normalize, docID);
+                spreadsheetPanel1.Enabled = true;
+                button1.Enabled = true;
+                ContentsBox.Enabled = true;
+                spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
+                spreadsheetPanel1.SetSelection(0, 0);
+                AddressLabel.Text = "A1:";
+                this.Text = formName;
                 MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }));
         }
@@ -643,7 +671,7 @@ namespace SS
 
             newForm.Invoke((MethodInvoker)(() =>
             {
-                newForm.sheet = new Spreadsheet( s => true, Normalize, docID);
+                newForm.sheet = new Spreadsheet(s => true, Normalize, docID);
                 newForm.spreadsheetPanel1.Enabled = true;
                 newForm.button1.Enabled = true;
                 newForm.ContentsBox.Enabled = true;
@@ -654,9 +682,9 @@ namespace SS
                 //adds al the items in the spreadsheet file into the spreadsheet grid
                 char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
                 List<char> list = alpha.ToList<char>();
-                for(int i =2; i<messageTokens.Length; i++)
+                for (int i = 2; i < messageTokens.Length; i++)
                 {
-                   
+
                     string[] cellValue = messageTokens[i].Split(new Char[] { '\r' }, StringSplitOptions.RemoveEmptyEntries); ;
 
                     string name = cellValue[0];
@@ -690,7 +718,7 @@ namespace SS
         }
         private void FileRename(string[] messageTokens)
         {
-          
+
             string newName = messageTokens[2];
             // Can only edit GUI on its own thread
             this.Invoke((MethodInvoker)(() =>
