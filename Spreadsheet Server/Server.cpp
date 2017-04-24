@@ -1,8 +1,5 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h> 
+#include <unistd.h> 
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -26,6 +23,8 @@ map<int, map<string,string> > spreadsheet;
 map<int, string> clients; // Holds the list of clients currently connected to the server <int, string> -> <clientID, Username>
 static int documentID;
 static int clientID; // Represents the next available client ID
+map<int,int> sockToClientID;
+map<int,vector<int> > allOpenedSpreadsheet;
 
 
 // Forward Declarations
@@ -33,7 +32,6 @@ void do_stuff(int sock);
 string fileList();
 void split (const string& s, char c,
 	    vector<string>& v);
-void showFileList(int sock, vector<string> messageTokens);
 void cell_edit(int sock, vector<string> messageTokens);
 void newSpreadsheet(int sock, vector<string> messageTokens);
 void openSpreadsheet(int sock, vector<string> messageTokens);
@@ -41,6 +39,8 @@ void saveFile(int sock, vector<string> messageTokens);
 void fileRename(int sock, vector<string> messageTokens);
 void undo_edit(int sock, vector<string> messageTokens);
 void redo_edit(int sock, vector<string> messageTokens);
+void showFileList(int sock, vector<string> messageTokens);
+void closeSpreadsheet (int sock, vector<string> messageTokens);
 
 int main(int argc, char** argv)
 {
@@ -54,10 +54,10 @@ int main(int argc, char** argv)
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sockfd < 0)
-  {
-	cout << "\nError establishing the connection!" << endl;
-	exit(1);
-  }
+    {
+      cout << "\nError establishing the connection!" << endl;
+      exit(1);
+    }
 
   // The the values in a buffer to zero
   bzero((char *) &server_addr, sizeof(server_addr));
@@ -68,10 +68,10 @@ int main(int argc, char** argv)
 
   // Bind the socket to the IP address and port number
   if ((bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
-  {
-	cout << "\nError binding connection!\n" << endl;
-	return -1;
-  }
+    {
+      cout << "\nError binding connection!\n" << endl;
+      return -1;
+    }
 
   cout << "\nServer started successfully...\n" << endl;
 
@@ -82,20 +82,21 @@ int main(int argc, char** argv)
   listen(sockfd, 1);
 
   while (1)
-  {
-	// Accept a new client
-	newsockfd = accept(sockfd, (struct sockaddr *)&server_addr, &size);
+    {
+      // Accept a new client
+      newsockfd = accept(sockfd, (struct sockaddr *)&server_addr, &size);
+	  cout << "newsockfd: " << newsockfd << endl;
 
-	if (newsockfd < 0)
-	  cout << "\nError accepting client!\n" << endl;
+      if (newsockfd < 0)
+	cout << "\nError accepting client!\n" << endl;
 
-	// Create a new thread for this client
-	pid = fork();
+      // Create a new thread for this client
+      pid = fork();
 
-	if (pid < 0)
-	  cout << "\nError on fork!\n" << endl;
+      if (pid < 0)
+	cout << "\nError on fork!\n" << endl;
 
-	if (pid == 0)
+      if (pid == 0)
 	{
 	  close(sockfd);
 	  clientID += 1;
@@ -107,9 +108,9 @@ int main(int argc, char** argv)
 	  do_stuff(newsockfd);
 	  exit(0);
 	}
-	else
-	  close(newsockfd);
-  }
+      else
+	close(newsockfd);
+    }
 
   close(sockfd);
   return 0;
@@ -141,44 +142,16 @@ void do_stuff(int sock)
   bool isUserName = true;
 
   while (1)
-  {
-	bzero(buffer, 1024);
-    n = read(sock, buffer, 1024);
-    if (n < 0)
-	  cout << "\nError on reading from socket!\n" << endl;
+    {
+      bzero(buffer, 1024);
+      n = read(sock, buffer, 1024);
+      if (n < 0)
+	cout << "\nError on reading from socket!\n" << endl;
 
-    /*string incomingData(buffer);
+      // Convert the entire buffer into a single string
+      string incomingData(buffer);
 
-	split(incomingData, '\n', messages);
-
-	for (unsigned i=0;i<messages.size()-1; i++)
-	{
-	  string message = messages[i];
-	  string opCode = message.substr(0,1);
-	  string output="";
-	  switch(opCode)
-	  {
-	  case "0": output=fileList;
-	  case "1": output=newFile (message);
-	  case "2": output=openFile (message);
-	  case "3": output=editCell (message);
-	  case "4": output=undo (message);
-	  case "5": output=redo (message);
-	  case "6": output=saveFile (message);
-	  case "7": output=renameFile (message);
-	  case "8": output=startToEditCell (message);
-	  case "9": output=closeFile (message);
-	  default:
-    }
-
-	n = write(sock, output, output.size());
-
-    messages.erase (messages.begin());*/
-
-	// Convert the entire buffer into a single string
-	string incomingData(buffer);
-
-	if (incomingData.find('\n') != string::npos)
+      if (incomingData.find('\n') != string::npos)
 	{
 	  printf("Entire message from client: %s\n", buffer);
 
@@ -187,91 +160,83 @@ void do_stuff(int sock)
 
 	  // Push all tokens from a single message to a vector
 	  while (tok != NULL)
-	  {
-	    messages.push_back(tok);
-	    tok = strtok(NULL, " \n");
-	  }
+	    {
+	      messages.push_back(tok);
+	      tok = strtok(NULL, " \n");
+	    }
 
 	  for (int i = 0; i < messages.size(); i++)
-	  {
-		cout << "Message: " << messages[i] << endl;
+	    {
+	      cout << "Message: " << messages[i] << endl;
 
-		istringstream iss(messages[i]);
-		string token;
-		while (getline(iss, token, '\t'))
+	      istringstream iss(messages[i]);
+	      string token;
+	      while (getline(iss, token, '\t'))
 		{
 		  messageTokens.push_back(token);
 		}
-	  }
+	    }
 
 	  for (int i = 0; i < messageTokens.size(); i++)
-	  {
-		cout << "Message Token: " << messageTokens[i] << endl;
-	  }
+	    {
+	      cout << "Message Token: " << messageTokens[i] << endl;
+	    }
 
 	  // Get the message type (opcode)
 	  int opCode = atoi(messageTokens[0].c_str());
 
 	  // The first thing received from the client should always be the username
 	  if (isUserName)
-	  {
-		opCode = -1;
-		isUserName = false;
-		clients.insert(pair<int, string>(clientID, messageTokens[0]));		
-	  }
+	    {
+	      opCode = -1;
+	      isUserName = false;
+	      clients.insert(pair<int, string>(clientID, messageTokens[0]));	
+	      sockToClientID[sock]=clientID;
+	    }
 
 	  cout << "OpCode: " << opCode << endl;
 
 	  // Call the appropriate functions based on the opCode
-      switch(opCode)
-      {
+	  switch(opCode)
+	    {
 	    case 0:
-	      // n = write(sock, (fileList()).c_str(), 1024);
-		  showFileList(sock,messageTokens);
-		  break;
+	      showFileList(sock,messageTokens);
+	      break;
 	    case 1:
-		  //n = write(sock, (newFile(incomingData)).c_str(), 1024);
-		  newSpreadsheet(sock, messageTokens);
-		  break;
+	      //n = write(sock, (newFile(incomingData)).c_str(), 1024);
+	      newSpreadsheet(sock, messageTokens);
+	      break;
 	    case 2:
-		  //n = write(sock, (openFile(incomingData)).c_str(), 1024);
-		  openSpreadsheet(sock, messageTokens);
-		  break;
-        case 3:
+	      //n = write(sock, (openFile(incomingData)).c_str(), 1024);
+	      openSpreadsheet(sock, messageTokens);
+	      break;
+	    case 3:
 	      cell_edit(sock, messageTokens);
 	      break;
 	    case 4:
-		  undo_edit(sock, messageTokens);
-		break;
+	      undo_edit(sock, messageTokens);
+	      break;
 	    case 5:
-		  redo_edit(sock, messageTokens);
-		  break;
+	      redo_edit(sock, messageTokens);
+	      break;
 	    case 6:
-		  saveFile(sock, messageTokens);
-		  break;
+	      saveFile(sock, messageTokens);
+	      break;
 	    case 7:
-		  fileRename(sock, messageTokens);
-		  break;
+	      fileRename(sock, messageTokens);
+	      break;
+	    case 9:
+	      //closeSpreadsheet (sock, messageTokens);
+	      break;
 	    default:
 	      // Do Nothing
 	      break;
-	  }
+	    }
 	}
 
-	messages.clear();
-	messageTokens.clear();
-  }
-}
-
-string fileList(){
-  string fileNames="0\t";
-  for (map<string,int>::iterator it = filename.begin(); it != filename.end(); ++it)
-    {
-      string temp = it->first + "\t";
-      fileNames.append(temp);
+      messages.clear();
+      messageTokens.clear();
     }
-  fileNames.append("\n");
-  return fileNames;
 }
 
 // Check if file name is not existed. Then assign new DocID for this file
@@ -285,7 +250,7 @@ void newSpreadsheet(int sock, vector<string>messageTokens){
     documentID++;   
   }
   else{
-      n = write(sock, (fileList()).c_str(), 1024);
+    showFileList(sock, messageTokens);
   }
 }
 
@@ -309,7 +274,7 @@ void openSpreadsheet(int sock, vector<string>messageTokens){
       }
   }
   else{
-    n = write(sock, (fileList()).c_str(), 1024);
+    showFileList(sock, messageTokens);
   }
 }
 
@@ -337,7 +302,7 @@ void saveFile(int sock, vector<string>messageTokens){
   map<string,int>::iterator d = filename.find(name);
   if (d !=filename.end()){
     int DocID = d->second;
-     n = write(sock,("7\t"+std::to_string(DocID)+"\n").c_str() ,1024);
+    n = write(sock,("7\t"+std::to_string(DocID)+"\n").c_str() ,1024);
   }
 }
 
@@ -357,7 +322,7 @@ void fileRename(int sock, vector<string>messageTokens){
     }
   }
   else{
-	n = write(sock, ("9\t"+std::to_string(DocID)+"\n").c_str(), 1024);
+    n = write(sock, ("9\t"+std::to_string(DocID)+"\n").c_str(), 1024);
   }
 }
 
@@ -370,8 +335,9 @@ void redo_edit(int sock, vector<string> messageTokens)
 {
   cout << "REDO CALLED!" << endl;
 }
+
 void showFileList(int sock, vector<string> messageTokens){
- string fileNames="0\t";
+  string fileNames="0\t";
   for (map<string,int>::iterator it = filename.begin(); it != filename.end(); ++it)
     {
       string temp = it->first + "\t";
@@ -380,3 +346,11 @@ void showFileList(int sock, vector<string> messageTokens){
   fileNames.append("\n");
   int n = write(sock,fileNames.c_str(), 1024);
 }
+
+/*void closeSpreadsheet (int sock, vector<string> messageTokens)
+{
+  int id = sockToClientID[sock];
+  int doc_ID=messageTokens[1];
+  vector<int> socks=allOpenedSpreadsheet[doc_ID];
+  
+  }*/
