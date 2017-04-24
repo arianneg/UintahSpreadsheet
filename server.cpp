@@ -15,6 +15,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/foreach.hpp>
+#include <set>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ map<int, string> clients; // Holds the list of clients currently connected to th
 static int documentID;
 static int clientID; // Represents the next available client ID
 map<int,int> sockToClientID;
-map<int,vector<int> > allOpenedSpreadsheet;
+map<int,set<int> > allOpenedSpreadsheet;
 
 
 // Forward Declarations
@@ -247,7 +248,7 @@ void newSpreadsheet(int sock, vector<string>messageTokens){
   if (filename.find(name)==filename.end()){
     filename[name]=documentID;
     n = write(sock,("1\t"+std::to_string(documentID)+"\n").c_str() ,1024);
-    allOpenedSpreadsheet[documentID].push_back(sock);
+    allOpenedSpreadsheet[documentID].insert(sock);
     documentID++;   
   }
   else{
@@ -273,6 +274,7 @@ void openSpreadsheet(int sock, vector<string>messageTokens){
 	  n = write(sock, ("3\t"+std::to_string(DocID)+"\t" + cellName + "\t" + cellContent + "\n").c_str(), 1024);
 	}
       }
+    allOpenedSpreadsheet[DocID].insert(sock);
   }
   else{
     showFileList(sock, messageTokens);
@@ -351,18 +353,13 @@ void showFileList(int sock, vector<string> messageTokens){
 void closeSpreedSheet (int sock, vector<string> messageTokens)
 {
   int doc_ID = atoi (messageTokens[1].c_str());
-  vector<int> socks=allOpenedSpreadsheet[doc_ID];
+  set<int> socks=allOpenedSpreadsheet[doc_ID];
   int userID = sockToClientID[sock];
-  for (vector<int>::iterator it = socks.begin() ; it != socks.end(); ){
-    if (sock!=*it){
-      string message="A\t"+messageTokens[1]+"\t-1"+"\t"+to_string(userID)+"\t"+clients[userID]+"\n";
-      int n=write(*it,(message).c_str(), 1024);
-      cout<<message<<endl;
-      ++it;
-    }
-    else{
-      it=socks.erase(it);
-    }
+  socks.erase(sock);
+  for (set<int>::iterator it = socks.begin() ; it != socks.end(); ++it){
+    string message="A\t"+messageTokens[1]+"\t-1"+"\t"+to_string(userID)+"\t"+clients[userID]+"\n";
+    int n=write(*it,(message).c_str(), 1024);
+    cout<<message<<endl;
   }
   allOpenedSpreadsheet[doc_ID]=socks;
 }
