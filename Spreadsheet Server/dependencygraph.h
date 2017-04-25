@@ -33,7 +33,7 @@ class DependencyGraph{
   void AddDependency(std::string s, std::string t);
 
   void RemoveDependency(std::string s, std::string t);
-  /////////new
+
   std::set<std::string> GetDirectDependents(std::string t);
   
   std::list<std::string> GetCellsToRecalculate(std::string name);
@@ -42,36 +42,6 @@ class DependencyGraph{
   
   void Visit(std::string start, std::string name, std::set<std::string> &visited, std::list<std::string> &changed);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // void ReplaceDependees(std::string s, std::vector<std::string> newDependees);
-
-  //void ReplaceDependents(std::string s, std::vector<std::string> newDependents);
-
-  
-  
-  
-
-  
 
 
 

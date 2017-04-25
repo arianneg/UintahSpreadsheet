@@ -66,82 +66,7 @@ void closeSpreadsheet (int sock, vector<string> messageTokens);
 int main(int argc, char** argv)
 {
   testServer();
-  /*int sockfd, newsockfd, pid;
-    int serverPort = 2112;
-    clientID = -1;
-    struct sockaddr_in server_addr;
-    socklen_t size;
-
-    // Create a new TCP socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-    if (sockfd < 0)
-    {
-    cout << "\nError establishing the connection!" << endl;
-    exit(1);
-    }
-
-    // The the values in a buffer to zero
-    bzero((char *) &server_addr, sizeof(server_addr));
-
-    server_addr.sin_family = AF_INET;                // The family of addresses accepted (IPv4 and IPv6)
-    server_addr.sin_addr.s_addr = htons(INADDR_ANY); // Holds the IP address used for the socket (The Server's IP)
-    server_addr.sin_port = htons(serverPort);        // Port number for the socket to use
-
-    // Bind the socket to the IP address and port number
-    if ((bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
-    {
-    cout << "\nError binding connection!\n" << endl;
-    return -1;
-    }
-
-    cout << "\nServer started successfully...\n" << endl;
-
-    size = sizeof(server_addr);
-    cout << "Listening for clients..." << endl;
-
-    // Listen for socket connections
-    listen(sockfd, 5);
-
-    while (1)
-    {
-    // Accept a new client
-    newsockfd = accept(sockfd, (struct sockaddr *)&server_addr, &size);
-    cout << "newsockfd: " << newsockfd << endl;
-
-    if (newsockfd < 0)
-    cout << "\nError accepting client!\n" << endl;
-
-    // Create a new thread for this client
-    pid = fork();
-
-    if (pid < 0)
-    cout << "\nError on fork!\n" << endl;
-
-    if (pid == 0)
-    {
-    //mtx.lock();
-    close(sockfd);
-    clientID += 1;
-    string clientIDStr;
-    ostringstream convert;
-    convert << clientID;
-    clientIDStr = convert.str() + '\n';
-    sockToClientID[clientID] = newsockfd;
-    for (map<int,int>::iterator it = sockToClientID.begin(); it != sockToClientID.end(); ++it)
-    {
-    cout << "Client ID: " << it->first << " Client Sock: " << it->second << endl; 
-    }
-    write(newsockfd, clientIDStr.c_str(), 32);
-    do_stuff(newsockfd);
-    exit(0);
-    //mtx.unlock();
-    }
-    else
-    close(newsockfd);
-    }
-
-    close(sockfd);*/
+  
   return 0;
   
 }
@@ -312,8 +237,7 @@ void testServer()
                 {  
 		  //set the string terminating NULL byte on the end 
 		  //of the data read 
-		  //buffer[valread] = '\0';  
-		  //send(sd , buffer , strlen(buffer) , 0 );
+		 
 		  static vector<string> messages;
 		  static vector<string> messageTokens;
 		  static bool isUserName = true;
@@ -426,112 +350,7 @@ void split(const string& s, char c, vector<string>& v)
   }
 }
 
-// OLD SERVER CODE, KEPT JUST IN CASE
-/*void do_stuff(int sock)
-  {
-  int n;
-  char buffer[1024];
-  vector<string> messages;
-  vector<string> messageTokens;
-  bool isUserName = true;
 
-  while (1)
-  {
-  bzero(buffer, 1024);
-  n = read(sock, buffer, 1024);
-  if (n < 0)
-  cout << "\nError on reading from socket!\n" << endl;
-
-  // Convert the entire buffer into a single string
-  string incomingData(buffer);
-
-  if (incomingData.find('\n') != string::npos)
-  {
-  printf("Entire message from client: %s\n", buffer);
-
-  char *tok;
-  tok = strtok(buffer, " \n"); // Split on tab characters and a newline character
-
-  // Push all tokens from a single message to a vector
-  while (tok != NULL)
-  {
-  messages.push_back(tok);
-  tok = strtok(NULL, " \n");
-  }
-
-  for (int i = 0; i < messages.size(); i++)
-  {
-  cout << "Message: " << messages[i] << endl;
-
-  istringstream iss(messages[i]);
-  string token;
-  while (getline(iss, token, '\t'))
-  {
-  messageTokens.push_back(token);
-  }
-  }
-
-  for (int i = 0; i < messageTokens.size(); i++)
-  {
-  cout << "Message Token: " << messageTokens[i] << endl;
-  }
-
-  // Get the message type (opcode)
-  int opCode = atoi(messageTokens[0].c_str());
-
-  // The first thing received from the client should always be the username
-  if (isUserName)
-  {
-  opCode = -1;
-  isUserName = false;
-  clients.insert(pair<int, string>(clientID, messageTokens[0]));	
-  sockToClientID[sock]=clientID;
-  }
-
-  cout << "OpCode: " << opCode << endl;
-
-  // Call the appropriate functions based on the opCode
-  switch(opCode)
-  {
-  case 0:
-  showFileList(sock,messageTokens);
-  break;
-  case 1:
-  //n = write(sock, (newFile(incomingData)).c_str(), 1024);
-  newSpreadsheet(sock, messageTokens);
-  break;
-  case 2:
-  //n = write(sock, (openFile(incomingData)).c_str(), 1024);
-  openSpreadsheet(sock, messageTokens);
-  break;
-  case 3:
-  cell_edit(sock, messageTokens);
-  break;
-  case 4:
-  undo_edit(sock, messageTokens);
-  break;
-  case 5:
-  redo_edit(sock, messageTokens);
-  break;
-  case 6:
-  saveFile(sock, messageTokens);
-  break;
-  case 7:
-  fileRename(sock, messageTokens);
-  break;
-  case 9:
-  //closeSpreadsheet (sock, messageTokens);
-  break;
-  default:
-  // Do Nothing
-  break;
-  }
-  }
-
-  messages.clear();
-  messageTokens.clear();
-  }
-  }*/
 
 // Check if file name is not existed. Then assign new DocID for this file
 // if the file exists, send a list of available spreadsheet
@@ -789,11 +608,3 @@ void showFileList(int sock, vector<string> messageTokens){
   cout<<fileNames<<endl;
   send(sock, fileNames.c_str(), strlen(fileNames.c_str()), 0);
 }
-
-/*void closeSpreadsheet (int sock, vector<string> messageTokens)
-  {
-  int id = sockToClientID[sock];
-  int doc_ID=messageTokens[1];
-  vector<int> socks=allOpenedSpreadsheet[doc_ID];
-  
-  }*/
