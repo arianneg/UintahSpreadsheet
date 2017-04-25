@@ -25,9 +25,11 @@ namespace SS
         private int clientID;
         private int docID;
         private bool requestNewSpreadsheet;
+        private bool requestOldSpreadsheet;
         private string temporaryName;
         private string formName;
-
+        private string serverAddress;
+        private Dictionary<int, Form1> Dictionary;
         /// <summary>
         /// Initalizes the spreadsheet with A1 cell selelcted, version is "ps6" by default
         /// </summary>
@@ -40,15 +42,20 @@ namespace SS
             spreadsheetPanel1.SetSelection(0, 0);
             AddressLabel.Text = "A1:";
             this.Text = "Spreadsheet";*/
-            string serverAddress = Microsoft.VisualBasic.Interaction.InputBox("Enter the Server Address:", "Enter Server Address", "lab1-18.eng.utah.edu", -1, -1);
+            serverAddress = Microsoft.VisualBasic.Interaction.InputBox("Enter the Server Address:", "Enter Server Address", "lab1-18.eng.utah.edu", -1, -1);
             userName = Microsoft.VisualBasic.Interaction.InputBox("Enter a Username:", "Enter Username", "Username", -1, -1);
             //this.serverTextBox.Text = "lab1-18.eng.utah.edu";
             spreadsheetPanel1.Enabled = false;
             button1.Enabled = false;
             ContentsBox.Enabled = false;
             ConnectToServer(serverAddress);
+            Dictionary = new Dictionary<int, Form1>();
         }
-
+        public Form1(String serverAddress)
+        {
+            InitializeComponent();
+            this.ConnectToServer(serverAddress);
+        }
 
         /// <summary>
         /// event that deels with selecting a cell, if cell already has contents it populates the approperiate labels with content information
@@ -133,6 +140,8 @@ namespace SS
                     ConvertStringToRowAndColumn(cell, out vertical, out horizontal);
                     ContentsBox.Text = sheet.GetCellContents(cell).ToString();
 
+                    string content = this.sheet.GetCellContents(cell).ToString();
+
                     string value = sheet.GetCellValue(cell).ToString();
                     //sets error message to box and value lebel if error in formula
                     if (value == "SpreadsheetUtilities.FormulaError")
@@ -142,9 +151,12 @@ namespace SS
                     }
                     else if (value != null && value != "")
                     {
-                        Networking.Send(this.server, "3\t1\t" + name + "\t" + value + "\n");
-                        //spreadsheetPanel1.SetValue(vertical, horizontal, value);
-                        //ValueBox.Text = value;
+                        if (content.Equals(value))
+                            Networking.Send(this.server, "3\t" + this.docID.ToString() + "\t" + name + "\t" + value + "\n");
+                        else
+                            Networking.Send(this.server, "3\t" + this.docID.ToString() + "\t" + name + "\t=" + content + "\n");
+                        spreadsheetPanel1.SetValue(vertical, horizontal, value);
+                        ValueBox.Text = value;
                     }
                 }
             }
@@ -180,7 +192,7 @@ namespace SS
         /// <param name="e">event</param>
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            requestNewSpreadsheet = true;
+            this.requestNewSpreadsheet = true;
             Networking.Send(this.server, "0\n");
             //NewApplicationContext.getAppContext().RunForm(new Form1());
         }
@@ -319,7 +331,7 @@ namespace SS
         /// <param name="e"></param>
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Networking.Send(this.server, "6\t"+this.sheet.GetSavedVersion(this.formName)+"\n");
+            Networking.Send(this.server, "6\t" + this.sheet.GetSavedVersion(this.formName) + "\n");
             // Displays a SaveFileDialog so the user can save the Image
             // assigned to file save.
 
@@ -353,7 +365,7 @@ namespace SS
                 }
             }*/
             // request list of files from server
-            requestNewSpreadsheet = false;
+            this.requestOldSpreadsheet = true;
             Networking.Send(this.server, "0\n");
             /*
             //opens file dialog box in c:
@@ -561,11 +573,11 @@ namespace SS
                         break;
                     case 1:
                         formName = temporaryName;
-                        CreateNewSpreadsheet(messageTokens);
+                        CreateNewSpreadsheet(messageTokens, formName);
                         break;
                     case 2:
                         formName = temporaryName;
-                        OpenOldSpreadsheet(messageTokens);
+                        OpenOldSpreadsheet(messageTokens, formName);
                         break;
                     case 3:
                         CellEdit(messageTokens);
@@ -651,20 +663,23 @@ namespace SS
         {
             StringBuilder fileList = new StringBuilder();
             fileList.Append("Available Spreadsheets:\n");
-            for(int i = 1; i<messageTokens.Length; i++)
+            for (int i = 1; i < messageTokens.Length; i++)
             {
                 fileList.Append(messageTokens[i]);
                 fileList.Append("\n");
             }
-            
-            if (requestNewSpreadsheet == true)
+
+            if (this.requestNewSpreadsheet == true)
             {
+                this.requestNewSpreadsheet = false;
                 fileList.Append("Enter a name for the new spreadsheet");
                 temporaryName = Microsoft.VisualBasic.Interaction.InputBox(fileList.ToString(), "Create New Spreadsheet", "Default", 0, 0);
                 Networking.Send(this.server, "1\t" + temporaryName + "\n");
+
             }
-            else
+            else if (this.requestOldSpreadsheet == true)
             {
+                this.requestOldSpreadsheet = false;
                 fileList.Append("Enter the name of the spreadsheet");
                 temporaryName = Microsoft.VisualBasic.Interaction.InputBox(fileList.ToString(), "Open Available Spreadsheet", "Default", -1, -1);
                 Networking.Send(this.server, "2\t" + temporaryName + "\n");
@@ -690,11 +705,11 @@ namespace SS
         //        MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
         //    }));
         //}
-        private void CreateNewSpreadsheet(String[] messageTokens)
+        private void CreateNewSpreadsheet(String[] messageTokens, String FileName)
         {
             this.Invoke((MethodInvoker)(() =>
             {
-                Form1 newForm = new Form1();
+                Form1 newForm = new Form1(serverAddress);
                 NewApplicationContext.getAppContext().RunForm(newForm);
                 newForm.docID = int.Parse(messageTokens[1]);
                 newForm.sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
@@ -704,19 +719,18 @@ namespace SS
                 newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
                 newForm.spreadsheetPanel1.SetSelection(0, 0);
                 newForm.AddressLabel.Text = "A1:";
-                newForm.Text = formName;
-                this.docID = int.Parse(messageTokens[1]);
+                newForm.Text = FileName;
+
+                //Dictionary.Add(newForm.docID, newForm);
             }));
         }
-        private void OpenOldSpreadsheet(String[] messageTokens)
+        private void OpenOldSpreadsheet(String[] messageTokens, String FileName)
         {
-
-            Form1 newForm = new Form1();
-            NewApplicationContext.getAppContext().RunForm(newForm);
-            newForm.docID = int.Parse(messageTokens[1]);
-
-            newForm.Invoke((MethodInvoker)(() =>
+            this.Invoke((MethodInvoker)(() =>
             {
+                Form1 newForm = new Form1(serverAddress);
+                NewApplicationContext.getAppContext().RunForm(newForm);
+                newForm.docID = int.Parse(messageTokens[1]);
                 newForm.sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
                 newForm.spreadsheetPanel1.Enabled = true;
                 newForm.button1.Enabled = true;
@@ -724,8 +738,9 @@ namespace SS
                 newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
                 newForm.spreadsheetPanel1.SetSelection(0, 0);
                 newForm.AddressLabel.Text = "A1:";
-                newForm.Text = formName;
-
+                newForm.Text = FileName;
+                //if(newForm != null)
+                //    Dictionary.Add(newForm.docID, newForm);
 
                 //adds al the items in the spreadsheet file into the spreadsheet grid
                 //char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
@@ -753,6 +768,10 @@ namespace SS
         {
             int column, row;
             string value = messageTokens[3];
+
+            //Form1 form;
+            //Dictionary.TryGetValue(int.Parse(messageTokens[1]),out form);
+
             ConvertStringToRowAndColumn(messageTokens[2], out column, out row);
 
             // Can only edit GUI on its own thread
