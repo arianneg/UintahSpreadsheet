@@ -582,9 +582,21 @@ namespace SS
                     case 3:
                         CellEdit(messageTokens);
                         break;
+                    case 4:
+                        MessageBox.Show(null, "Valid Edit", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                    case 5:
+                        MessageBox.Show(null, "Invalid Edit", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
                     case 6:
                         formName = temporaryName;
                         FileRename(messageTokens);
+                        break;
+                    case 7:
+                        MessageBox.Show(null, "File is saved", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        break;
+                    case 8:
+                        MessageBox.Show(null, "File is renamed", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         break;
                     case 9:
                         MessageBox.Show(null, "This filename exist. Please Try again", "Error Message", MessageBoxButtons.OK, MessageBoxIcon.Information);
