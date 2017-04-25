@@ -553,6 +553,19 @@ void openSpreadsheet(int clientID, int sock, vector<string>messageTokens){
   
   if (d !=filename.end()){
     int DocID = d->second;
+
+
+    //set up dependency graph corresponding to this document
+    if(graphs.find(DocID) == graphs.end()){
+      DependencyGraph graph;
+      pair<int, DependencyGraph> paired;
+      paired = make_pair(DocID, graph);
+      graphs.insert(paired);
+
+    }
+
+
+
     map<int,map<string,string>>::iterator s = spreadsheet.find(DocID);
 
 	cout << "OPEN AND DOC ID: " << DocID << endl;
@@ -581,7 +594,8 @@ void cell_edit(int sock, vector<string> messageTokens)
   int DocID = atoi(messageTokens[1].c_str());
   string cellName = messageTokens[2];
   string newContents = messageTokens[3];
-
+  bool circularDependency = false;
+  
   //if contents is a formula
   if(newContents.at(0) == '='){
 
@@ -601,43 +615,40 @@ void cell_edit(int sock, vector<string> messageTokens)
 	}
       }
 
+
+    
+
+
       //add dependencies
       for (auto var : variables){
-	graph.AddDependency(cellName, var);
+	graphs.find(DocID)->second.AddDependency(cellName, var);
       }
 
-      //if there are no circular dependencies, no exception is thrown and the edit message is sent to the clients
+      //if there are no circular dependencies, no exception is thrown 
       try{
-	graph.GetCellsToRecalculate(cellName);
+	graphs.find(DocID)->second.GetCellsToRecalculate(cellName);
 
 	// Save cell name and cell contents
-	spreadsheet[DocID][cellName] = newContents;
-	n = write(sock, ("4\t" + messageTokens[1]+"\n").c_str(), 32); // Sends a valid message
-	n = write(sock, ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), 1024); // Send the cell edit
+	//	spreadsheet[DocID][cellName] = newContents;
+	//	n = write(sock, ("4\t" + messageTokens[1]+"\n").c_str(), 32); // Sends a valid message
+	//	n = write(sock, ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), 1024); // Send the cell edit
 	
       }
       //catch circular dependency exception and remove all new dependencies which caused the circle
       catch(int param){
-	cout<<"catch"<<endl;
-
+	circularDependency = true;
 	for (auto var: variables){
-	  cout<<var<<endl;
-	  graph.RemoveDependency(cellName, var);
-
-	  
-	  //send circular dependency error message here
-
+	graphs.find(DocID)->second.RemoveDependency(cellName, var);
 	}
       }
     }
-  }
+  
 
  
 
   // Save Cell Contents for Undo Still Required
 
-//if the cell contents is not a formula 
-// Save cell name and cell contents and broadcast edit to clients 
+if(!circularDependency){//if there was not a circular dependency, save cell contents and broadcast edit message
   spreadsheet[DocID][cellName] = newContents;
 
 
@@ -649,8 +660,24 @@ void cell_edit(int sock, vector<string> messageTokens)
        send(clientIDToSock[clientID], ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), strlen(("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str()), 0); // Send the cell edit
 	}
   }
+ }
+ else{
 
+   //send circular dependency error message here
+    for(map<int, int>::iterator it = clientIDToDocID.begin();it!=clientIDToDocID.end();it++)
+  {
+	if (it->second == DocID)
+	{
+	   send(clientIDToSock[clientID], ("5\t" + messageTokens[1]+"\n").c_str(), strlen(("5\t" + messageTokens[1]+"\n").c_str()), 0); // Sends an invalid message
+       
+	}
+  }
+ }
 }
+}
+
+
+
 
 void saveFile(int sock, vector<string>messageTokens){
   int n;
