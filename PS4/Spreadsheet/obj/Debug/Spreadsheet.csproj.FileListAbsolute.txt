@@ -22,6 +22,5 @@ C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\Formula.d
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\SpreadsheetUtilities.dll
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\Formula.xml
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\bin\Debug\SpreadsheetUtilities.xml
-C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\obj\Debug\Spreadsheet.csprojResolveAssemblyReference.cache
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\obj\Debug\Spreadsheet.dll
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\Spreadsheet\obj\Debug\Spreadsheet.pdb

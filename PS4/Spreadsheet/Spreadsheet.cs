@@ -173,7 +173,7 @@ namespace SS
             {
                 cell cell = new cell();
                 dictionary.TryGetValue(name, out cell);
-                
+                double doubleCheck;
                 //for double content
                 if (cell.getContent().GetType() == typeof(Double))
                 {
@@ -184,8 +184,7 @@ namespace SS
                 if (isFormula)
                 {
                     Formula f = (Formula)cell.getContent();
-                    string form = f.ToString();
-                    return "=" + form;
+                    return f;
                 }
                 //for string content
                 bool isString = cell.getContent().GetType() == typeof(String);
@@ -574,14 +573,15 @@ namespace SS
                             writer.WriteEndElement();
                         }
                         //if formula puts that as element content
-                        else if (GetCellContents(name).ToString().ElementAt(0) == '=')
+                        else if (GetCellContents(name).GetType() == typeof(Formula))
                         {
                             Formula f = (Formula)cell.getContent();
+
                             writer.WriteElementString("contents", "=" + f.ToString());
                             writer.WriteEndElement();
                         }
                         //if string sets that to element content
-                        else if (GetCellContents(name).ToString().ElementAt(0)!='=')
+                        else if (GetCellContents(name).GetType() == typeof(String))
                         {
                             writer.WriteElementString("contents", (String)cell.getContent());
                             writer.WriteEndElement();
@@ -589,7 +589,6 @@ namespace SS
                     }
                     //ends document
                     writer.WriteEndDocument();
-                    Changed = false;
                 }
             }
             catch
@@ -645,7 +644,6 @@ namespace SS
             //if name does not exsists thwos exception
             if (!dictionary.ContainsKey(name))
             {
-                ///this is the bug
                 throw new ArgumentException();
             }
             if (dictionary.ContainsKey(name))

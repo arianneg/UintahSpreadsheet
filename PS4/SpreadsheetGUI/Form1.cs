@@ -319,7 +319,7 @@ namespace SS
         /// <param name="e"></param>
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Networking.Send(this.server, "6\n");
+            Networking.Send(this.server, "6\t"+this.sheet.GetSavedVersion(this.formName)+"\n");
             // Displays a SaveFileDialog so the user can save the Image
             // assigned to file save.
 
@@ -692,19 +692,20 @@ namespace SS
         //}
         private void CreateNewSpreadsheet(String[] messageTokens)
         {
-            this.docID = int.Parse(messageTokens[1]);
-
             this.Invoke((MethodInvoker)(() =>
             {
-                sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
-                spreadsheetPanel1.Enabled = true;
-                button1.Enabled = true;
-                ContentsBox.Enabled = true;
-                spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
-                spreadsheetPanel1.SetSelection(0, 0);
-                AddressLabel.Text = "A1:";
-                this.Text = formName;
-                MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Form1 newForm = new Form1();
+                NewApplicationContext.getAppContext().RunForm(newForm);
+                newForm.docID = int.Parse(messageTokens[1]);
+                newForm.sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
+                newForm.spreadsheetPanel1.Enabled = true;
+                newForm.button1.Enabled = true;
+                newForm.ContentsBox.Enabled = true;
+                newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
+                newForm.spreadsheetPanel1.SetSelection(0, 0);
+                newForm.AddressLabel.Text = "A1:";
+                newForm.Text = formName;
+                this.docID = int.Parse(messageTokens[1]);
             }));
         }
         private void OpenOldSpreadsheet(String[] messageTokens)
@@ -712,7 +713,7 @@ namespace SS
 
             Form1 newForm = new Form1();
             NewApplicationContext.getAppContext().RunForm(newForm);
-            this.docID = int.Parse(messageTokens[1]);
+            newForm.docID = int.Parse(messageTokens[1]);
 
             newForm.Invoke((MethodInvoker)(() =>
             {
@@ -724,23 +725,25 @@ namespace SS
                 newForm.spreadsheetPanel1.SetSelection(0, 0);
                 newForm.AddressLabel.Text = "A1:";
                 newForm.Text = formName;
+
+
                 //adds al the items in the spreadsheet file into the spreadsheet grid
-                char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
-                List<char> list = alpha.ToList<char>();
-                for (int i = 2; i < messageTokens.Length; i++)
-                {
+                //char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+                //List<char> list = alpha.ToList<char>();
+                //for (int i = 2; i < messageTokens.Length; i++)
+                //{
 
-                    string[] cellValue = messageTokens[i].Split(new Char[] { '\r' }, StringSplitOptions.RemoveEmptyEntries); ;
+                //    string[] cellValue = messageTokens[i].Split(new Char[] { '\r' }, StringSplitOptions.RemoveEmptyEntries); ;
 
-                    string name = cellValue[0];
-                    string contents = sheet.GetCellContents(name).ToString();
-                    string value = sheet.GetCellValue(name).ToString();
+                //    string name = cellValue[0];
+                //    string contents = sheet.GetCellContents(name).ToString();
+                //    string value = sheet.GetCellValue(name).ToString();
 
-                    int col = list.IndexOf(char.Parse(name.Substring(0, 1)));
-                    int row = int.Parse(name.Substring(1, 1));
+                //    int col = list.IndexOf(char.Parse(name.Substring(0, 1)));
+                //    int row = int.Parse(name.Substring(1, 1));
 
-                    spreadsheetPanel1.SetValue(col, row - 1, value);
-                }
+                //    spreadsheetPanel1.SetValue(col, row - 1, value);
+                //}
 
                 MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }));
