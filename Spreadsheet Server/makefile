@@ -1,5 +1,5 @@
 main: Server.cpp
-	g++ -std=c++11 Server.cpp Formula.cpp /usr/local/lib/libboost_regex.a dependencygraph.cpp node.cpp -o server
+	g++ -std=c++11 Server.cpp Formula.cpp /usr/local/lib/libboost_regex.a dependencygraph.cpp node.cpp  -o server
 
 clean:
 	rm -f server *~

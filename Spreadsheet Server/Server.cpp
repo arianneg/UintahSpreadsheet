@@ -16,7 +16,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/foreach.hpp>
-
+#include <stack>
 #include "Formula.h"
 #include "dependencygraph.h"
 
@@ -30,7 +30,9 @@ using namespace std;
 std::mutex mtx;
 
 map<int, DependencyGraph> graphs;
-//DependencyGraph graph;
+map<int, stack<pair<string, string > > >undos;
+map<int, stack<pair<string , string> > >redos;
+
 map<string,int> filename;
 map<int, map<string,string> > spreadsheet;
 map<int, string> clients; // Holds the list of clients currently connected to the server <int, string> -> <clientID, Username>
@@ -565,6 +567,31 @@ void openSpreadsheet(int clientID, int sock, vector<string>messageTokens){
 
     }
 
+    //set up stack of undos
+    if(undos.find(DocID)== undos.end()){
+      stack<pair<string, string> > Stack;
+
+      pair<int, stack<pair<string, string> > > paired ;
+      
+      paired = make_pair(DocID, Stack);
+      
+      undos.insert(paired);
+
+    }
+
+    //set up stac of redos 
+if(redos.find(DocID)== redos.end()){
+      stack<pair<string, string> > Stack;
+
+      pair<int, stack<pair<string, string> > > paired ;
+      
+      paired = make_pair(DocID, Stack);
+      
+      redos.insert(paired);
+
+    }
+
+    
 
     map<int,map<string,string>>::iterator s = spreadsheet.find(DocID);
 
@@ -628,10 +655,7 @@ void cell_edit(int sock, vector<string> messageTokens)
       try{
 	graphs.find(DocID)->second.GetCellsToRecalculate(cellName);
 
-	// Save cell name and cell contents
-	//	spreadsheet[DocID][cellName] = newContents;
-	//	n = write(sock, ("4\t" + messageTokens[1]+"\n").c_str(), 32); // Sends a valid message
-	//	n = write(sock, ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), 1024); // Send the cell edit
+	
 	
       }
       //catch circular dependency exception and remove all new dependencies which caused the circle
@@ -646,7 +670,10 @@ void cell_edit(int sock, vector<string> messageTokens)
  
 
 
-    // Save Cell Contents for Undo Still Required
+    // Save Cell Contents for Undo
+    pair<string, string> paired ;
+    paired = make_pair(cellName, newContents);
+    undos.find(DocID)->second.push(paired);
 
     // Save cell name and cell contents
     spreadsheet[DocID][cellName] = newContents;
@@ -661,7 +688,28 @@ void cell_edit(int sock, vector<string> messageTokens)
 	  }
       }
   }
-  else{
+
+  else{ 
+
+
+     // Save Cell Contents for Undo
+    pair<string, string> paired ;
+    paired = make_pair(cellName, newContents);
+    undos.find(DocID)->second.push(paired);
+    spreadsheet[DocID][cellName] = newContents;
+
+  
+    for(map<int, int>::iterator it = clientIDToDocID.begin();it!=clientIDToDocID.end();it++)
+      {
+	if (it->second == DocID)
+	  {
+	    send(clientIDToSock[clientID], ("4\t" + messageTokens[1]+"\n").c_str(), strlen(("4\t" + messageTokens[1]+"\n").c_str()), 0); // Sends a valid message
+	    send(clientIDToSock[clientID], ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), strlen(("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str()), 0); // Send the cell edit
+	  }
+      }
+  }
+
+if(circularDependency){
 
     //send circular dependency error message here
     for(map<int, int>::iterator it = clientIDToDocID.begin();it!=clientIDToDocID.end();it++)
@@ -677,7 +725,25 @@ void cell_edit(int sock, vector<string> messageTokens)
 }
 
 
+void undo_edit(int sock, vector<string> messageTokens)
+{
+  cout << "UNDO CALLED!" << endl;
+ int DocID = atoi(messageTokens[1].c_str());
+  for(map<int, int>::iterator it = clientIDToDocID.begin();it!=clientIDToDocID.end();it++)
+      {
+	if (it->second == DocID)
+	  {
+	   
+	    send(clientIDToSock[clientID], ("3\t" + messageTokens[1]+"\t" + undos.find(DocID)->second.top().first + "\t" + undos.find(DocID)->second.top().second + "\n").c_str(), strlen(("3\t" + messageTokens[1]+"\t" + undos.find(DocID)->second.top().first + "\t" +  undos.find(DocID)->second.top().second + "\n").c_str()), 0); // Send the cell edit
+	  }
+      }
+  undos.find(DocID)->second.pop();
+}
 
+void redo_edit(int sock, vector<string> messageTokens)
+{
+  cout << "REDO CALLED!" << endl;
+}
 
 void saveFile(int sock, vector<string>messageTokens){
   int n;
@@ -709,15 +775,7 @@ void fileRename(int sock, vector<string>messageTokens){
   }
 }
 
-void undo_edit(int sock, vector<string> messageTokens)
-{
-  cout << "UNDO CALLED!" << endl;
-}
 
-void redo_edit(int sock, vector<string> messageTokens)
-{
-  cout << "REDO CALLED!" << endl;
-}
 
 void showFileList(int sock, vector<string> messageTokens){
   string fileNames="0";
