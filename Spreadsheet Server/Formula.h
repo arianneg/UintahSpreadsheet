@@ -30,7 +30,7 @@ class Formula
   bool isBalanced (std::vector<std::string> input);
   bool checkNameValidity (std::string name);
   bool isDouble (std::string token);
-  
+  std::vector<std::string> getTokens();
 
 };
 

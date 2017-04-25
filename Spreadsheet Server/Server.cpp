@@ -15,9 +15,12 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/foreach.hpp>
-
+#include "Formula.h"
+#include "dependencygraph.h"
 using namespace std;
 
+map<int, DependencyGraph> graphs;
+//DependencyGraph graph;
 map<string,int> filename;
 map<int, map<string,string> > spreadsheet;
 map<int, string> clients; // Holds the list of clients currently connected to the server <int, string> -> <clientID, Username>
@@ -286,14 +289,66 @@ void cell_edit(int sock, vector<string> messageTokens)
   string cellName = messageTokens[2];
   string newContents = messageTokens[3];
 
-  // Circular Dependency Check Still Required
+  //if contents is a formula
+  if(newContents.at(0) == '='){
+
+    //make formula
+    Formula formula(newContents);
+
+    //get formula tokens 
+    vector<string> formulaTokens = formula.getTokens();
+    vector<string> variables;
+
+    //loop through formula tokens and store only the variables
+    for (auto tok : formulaTokens){
+      if(tok != "=" & tok != "+" && tok != "-" && tok != "*" && tok != "/" ){
+
+	if(isalpha(tok.at(0))){
+	  variables.push_back (tok);
+	}
+      }
+
+      //add dependencies
+      for (auto var : variables){
+	graph.AddDependency(cellName, var);
+      }
+
+      //if there are no circular dependencies, no exception is thrown and the edit message is sent to the clients
+      try{
+	graph.GetCellsToRecalculate(cellName);
+
+	// Save cell name and cell contents
+	spreadsheet[DocID][cellName] = newContents;
+	n = write(sock, ("4\t" + messageTokens[1]+"\n").c_str(), 32); // Sends a valid message
+	n = write(sock, ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), 1024); // Send the cell edit
+	
+      }
+      //catch circular dependency exception and remove all new dependencies which caused the circle
+      catch(int param){
+	cout<<"catch"<<endl;
+
+	for (auto var: variables){
+	  cout<<var<<endl;
+	  graph.RemoveDependency(cellName, var);
+
+	  
+	  //send circular dependency error message here
+
+	}
+      }
+    }
+  }
+
+ 
 
   // Save Cell Contents for Undo Still Required
 
-  // Save cell name and cell contents
+//if the cell contents is not a formula 
+// Save cell name and cell contents and broadcast edit to clients 
   spreadsheet[DocID][cellName] = newContents;
   n = write(sock, ("4\t" + messageTokens[1]+"\n").c_str(), 32); // Sends a valid message
   n = write(sock, ("3\t" + messageTokens[1]+"\t" + cellName + "\t" + newContents + "\n").c_str(), 1024); // Send the cell edit
+  
 }
 
 void saveFile(int sock, vector<string>messageTokens){

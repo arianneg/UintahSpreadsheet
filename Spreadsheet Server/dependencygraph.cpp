@@ -227,30 +227,6 @@ void DependencyGraph::RemoveDependency(string s, string t){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 set<string> DependencyGraph::GetDirectDependents(string t){
 
   return GetDependents(t);
@@ -258,9 +234,7 @@ set<string> DependencyGraph::GetDirectDependents(string t){
 }
 
 void DependencyGraph::Visit(string start, string name, set<string> &visited, list<string> &changed){
-  //cout<<"here"<<endl;
-  //cout<<start<<endl;
-  //cout<<name<<endl;
+  
 
   visited.insert(name);
   set<string> directDependents = GetDirectDependents(name);
@@ -313,21 +287,3 @@ list<string> DependencyGraph::GetCellsToRecalculate(string name){
 
 
 
-
-
-
-
-
-
-
-
-
-
-//void DependencyGraph::ReplaceDependees(string s, vector<string> newDependees){
-
-
-  
-// }
-//void DependencyGraph::ReplaceDependents(string s, vector<string> newDependents){
-
-//}

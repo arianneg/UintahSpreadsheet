@@ -149,10 +149,18 @@ bool Formula::checkSyntax(vector<string> tokenList)
     }
   return true;
 }
-int main(){
+
+
+
+vector<string> Formula::getTokens(){
+  return tokens;
+
+
+}
+//int main(){
   
-  string formula("=1+x2+2");
-  Formula f(formula);
+// string formula("=1+x2+2");
+// Formula f(formula);
   
   //vector<string> test = f.checkTokens(formula);
   /*
@@ -161,6 +169,6 @@ int main(){
     }*/
   //cout<<f.checkSyntax(test)<<endl;
   
-  return 0;
+// return 0;
 
-}
+//}
