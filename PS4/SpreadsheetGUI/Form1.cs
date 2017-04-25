@@ -399,6 +399,7 @@ namespace SS
         /// <param name="e"></param>
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Networking.Send(this.server, "9\t"+ this.sheet.GetSavedVersion(this.formName) + "\n");
             this.Close();
         }
         /// <summary>
