@@ -46,9 +46,7 @@ C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\Spread
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetPanel.dll
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\NetworkController.pdb
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\Spreadsheet.pdb
-C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\Formula.xml
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetPanel.xml
-C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\bin\Debug\SpreadsheetUtilities.xml
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.csprojResolveAssemblyReference.cache
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SS.Form1.resources
 C:\Users\Minh\Source\Repos\UintahSpreadsheet\PS4\SpreadsheetGUI\obj\Debug\SpreadsheetGUI.Properties.Resources.resources
