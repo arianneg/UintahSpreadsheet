@@ -720,21 +720,19 @@ namespace SS
         //}
         private void CreateNewSpreadsheet(String[] messageTokens, String FileName)
         {
+            this.docID = int.Parse(messageTokens[1]);
+
             this.Invoke((MethodInvoker)(() =>
             {
-                Form1 newForm = new Form1(serverAddress);
-                NewApplicationContext.getAppContext().RunForm(newForm);
-                newForm.docID = int.Parse(messageTokens[1]);
-                newForm.sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
-                newForm.spreadsheetPanel1.Enabled = true;
-                newForm.button1.Enabled = true;
-                newForm.ContentsBox.Enabled = true;
-                newForm.spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
-                newForm.spreadsheetPanel1.SetSelection(0, 0);
-                newForm.AddressLabel.Text = "A1:";
-                newForm.Text = FileName;
-
-                //Dictionary.Add(newForm.docID, newForm);
+                sheet = new Spreadsheet(s => true, Normalize, this.docID.ToString());
+                spreadsheetPanel1.Enabled = true;
+                button1.Enabled = true;
+                ContentsBox.Enabled = true;
+                spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_Selection;
+                spreadsheetPanel1.SetSelection(0, 0);
+                AddressLabel.Text = "A1:";
+                this.Text = formName;
+                MessageBox.Show(null, "Spreadsheet created successfully, you can now edit.", "Spreadsheet Created Successfully", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }));
         }
         private void OpenOldSpreadsheet(String[] messageTokens, String FileName)
